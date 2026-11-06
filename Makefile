@@ -91,6 +91,7 @@ bump: ## Rewrite VERSION, Cargo.toml, tauri.conf.json (VERSION=x.y.z)
 	@echo "$(VERSION)" > VERSION
 	@perl -0pi -e 's/^version = ".*?"/version = "$(VERSION)"/m' $(MANIFEST)
 	@perl -0pi -e 's/"version": ".*?"/"version": "$(VERSION)"/' $(TAURI)/tauri.conf.json
+	@perl -0pi -e 's/^(\s*version )".*?"/$$1"$(VERSION)"/m' Casks/deepseek-pet.rb
 	@cargo update --manifest-path $(MANIFEST) -w >/dev/null 2>&1 || true
 	@echo "VERSION -> $(VERSION)"
 
@@ -98,7 +99,7 @@ bump: ## Rewrite VERSION, Cargo.toml, tauri.conf.json (VERSION=x.y.z)
 release: ## Bump, amend HEAD, push, tag, push tag -> CI (USER ONLY)
 	@if [ -z "$(VERSION)" ]; then echo "Usage: make release VERSION=x.y.z"; exit 1; fi
 	$(MAKE) bump VERSION=$(VERSION)
-	git add VERSION $(MANIFEST) $(TAURI)/Cargo.lock $(TAURI)/tauri.conf.json
+	git add VERSION Casks/deepseek-pet.rb $(MANIFEST) $(TAURI)/Cargo.lock $(TAURI)/tauri.conf.json
 	git commit --amend --no-edit
 	git push origin HEAD
 	git tag v$(VERSION)

@@ -39,23 +39,3 @@ jobs:
         run: |
           gh release create "$GITHUB_REF_NAME" out/* --title "$GITHUB_REF_NAME" \
             --notes-file "RELEASE/$GITHUB_REF_NAME.md" || gh release create "$GITHUB_REF_NAME" out/* --generate-notes
-  homebrew:
-    needs: build
-    runs-on: ubuntu-latest
-    # This repo is its own tap (Casks/deepseek-pet.rb); no second repo or PAT needed.
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: main
-      - name: Render cask from the released dmg and push to main
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          VER="${GITHUB_REF_NAME#v}"
-          gh release download "$GITHUB_REF_NAME" --pattern '*.dmg' --dir dl
-          mkdir -p Casks
-          scripts/update-cask.sh "$VER" dl/*.dmg | sed '1,2d' > Casks/deepseek-pet.rb
-          git add Casks
-          git diff --cached --quiet && exit 0
-          git -c user.name=release-bot -c user.email=noreply@github.com commit -m "cask: deepseek-pet ${GITHUB_REF_NAME}"
-          git push origin main

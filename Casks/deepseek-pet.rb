@@ -1,6 +1,6 @@
 cask "deepseek-pet" do
-  version "0.8.5"
-  sha256 "92ae435e72fcd27c20e1a1e7d4ca9e4aca5341782ec1cc78fdc1e5f256d1f462"
+  version "0.8.7"
+  sha256 :no_check # the dmg is built by CI after the tag, so its hash cannot be committed with the tag
 
   url "https://github.com/teochenglim/deepseek-pet/releases/download/v#{version}/DeepseekPet_#{version}_aarch64.dmg"
   name "deepseek-pet"

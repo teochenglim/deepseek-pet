@@ -28,7 +28,7 @@ Code map:
 | `desktop/cross-platform/hooks/agents.json` | the one table of supported agents (config path, format, events, native event names); read by the installer, `common.py` and the Rust menus |
 | `tools/install_hooks.py`, `scripts/install-hooks.sh`, `scripts/uninstall-hooks.sh` | idempotent installer for every agent in agents.json plus `status` (marker `# deepseek-pet`); the menu's Install hooks runs it |
 | `desktop/cross-platform/src-tauri/src/{hooks,settings}.rs` | menu rows and installer driver; `settings.json` (active source) |
-| `packaging/homebrew/`, `Casks/` | cask template; `scripts/update-cask.sh` renders it into `Casks/deepseek-pet.rb`; this repo is its own tap (`brew tap teochenglim/deepseek-pet <repo url>`); the release job commits the cask to main |
+| `Casks/deepseek-pet.rb` | Homebrew cask; this repo is its own tap (`brew tap teochenglim/deepseek-pet <repo url>`). `make bump` rewrites its version, `make release` commits it with the tag; no CI commit back to main (that made every release diverge) |
 
 ## Commands
 

@@ -717,6 +717,12 @@ export function setupInteractions({ animator, menu, bubble, petSprite, jsLog }) 
       }
       lastClickTime = now;
 
+      // Single click: short wave. triggerOneShot remembers the current state and returns to it,
+      // so a working fish keeps working after the reaction.
+      if (clickCount < 3) {
+        animator.triggerOneShot("waving");
+      }
+
       if (clickCount >= 3) {
         // 三连击 → 清除所有会话。重置计数器，使第 4 次点击不会
         // 连续触发又一次清除。

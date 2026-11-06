@@ -5,7 +5,7 @@ macOS desktop pet. Tauri v2 (Rust + system WebView, plain HTML/JS, no bundler) f
 ## Where things stand
 
 - Built: v0.1.0 code done and `make check` green; .app and .dmg build. Awaiting the human visual pass (see Limits in RELEASE/v0.1.0.md). 0.2.0-1.0.0 planned. Status table: [RELEASE.md](RELEASE.md).
-- Next: finish v0.3.0 (hooks + app icon built, see RELEASE/v0.3.0.md), then 0.4.0.
+- Next: finish v0.4.0 (see RELEASE/v0.4.0.md), then 1.0.0.
 - Reference clones `coding-agent-pet/` and `big-blue-fish-desktop-pet/` are git-ignored read-only references. Never edit them; copy what is needed into `desktop/cross-platform/`, `assets/`.
 
 Code map:

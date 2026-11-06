@@ -169,6 +169,27 @@ pub fn run() {
                 endpoint: endpoint_for_guard,
             });
 
+            // 11. Menu-bar icon: restores a hidden pet and offers Quit
+            {
+                use tauri::menu::{Menu, MenuItem};
+                use tauri::tray::TrayIconBuilder;
+                let show =
+                    MenuItem::with_id(app, "show", "Show Big Blue Fish", true, None::<&str>)?;
+                let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+                let menu = Menu::with_items(app, &[&show, &quit])?;
+                let mut tray = TrayIconBuilder::new()
+                    .menu(&menu)
+                    .on_menu_event(|app, event| match event.id.as_ref() {
+                        "show" => commands::show_pet(app),
+                        "quit" => commands::shutdown(app),
+                        _ => {}
+                    });
+                if let Some(icon) = app.default_window_icon() {
+                    tray = tray.icon(icon.clone());
+                }
+                tray.build(app)?;
+            }
+
             info!("DeepseekPet running. Press Ctrl+C to exit.");
 
             Ok(())
@@ -177,6 +198,7 @@ pub fn run() {
             commands::get_config,
             commands::run_applescript,
             commands::quit_app,
+            commands::hide_pet,
             commands::purge_all_sessions,
             commands::read_file_bytes,
             commands::read_frames_batch,
@@ -184,5 +206,5 @@ pub fn run() {
             commands::js_log
         ])
         .run(tauri::generate_context!())
-        .expect("error while running KotoriPet");
+        .expect("error while running DeepseekPet");
 }

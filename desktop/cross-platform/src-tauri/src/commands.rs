@@ -4,6 +4,7 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
+use tauri::Manager;
 use tracing::info;
 
 #[derive(Debug, Clone, Serialize)]
@@ -67,17 +68,41 @@ pub fn get_config(config: tauri::State<'_, PetConfig>) -> FrontendConfig {
     }
 }
 
-#[tauri::command]
-pub fn quit_app(app: tauri::AppHandle, config: tauri::State<'_, PetConfig>) {
-    info!("quit_app command invoked from frontend");
-    // app.exit() 会触发 process::exit()，从而跳过 Rust 的 Drop 实现——因此受托管的
-    // SocketGuard（lib.rs）在这条主退出路径上永远不会执行。这里显式删除 socket。
-    // 启动时的 connect 探测（覆盖会话间的崩溃/被杀）与 SocketGuard（覆盖 panic
-    // unwind）补齐其余缺口，因此 socket 在每种终止情形下都会被回收。
-    if !config.event_endpoint.starts_with("tcp://") {
-        let _ = std::fs::remove_file(&config.event_endpoint);
+/// Remove the Unix socket file (no-op for tcp:// endpoints). `app.exit()` skips Drop impls, so
+/// every exit path must call this explicitly.
+pub fn cleanup_endpoint(endpoint: &str) {
+    if !endpoint.starts_with("tcp://") {
+        let _ = std::fs::remove_file(endpoint);
+    }
+}
+
+/// Clean up and terminate the process. Shared by the context menu and the tray menu.
+pub fn shutdown(app: &tauri::AppHandle) {
+    if let Some(config) = app.try_state::<PetConfig>() {
+        cleanup_endpoint(&config.event_endpoint);
     }
     app.exit(0);
+}
+
+#[tauri::command]
+pub fn quit_app(app: tauri::AppHandle) {
+    info!("quit_app command invoked from frontend");
+    shutdown(&app);
+}
+
+/// Hide the pet window; the menu-bar icon brings it back.
+#[tauri::command]
+pub fn hide_pet(app: tauri::AppHandle) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.hide();
+    }
+}
+
+/// Show the pet window again (menu-bar icon).
+pub fn show_pet(app: &tauri::AppHandle) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.show();
+    }
 }
 
 /// 清除磁盘上所有会话文件，并清空内存中的活动 map。由前端三连击交互触发。
@@ -316,5 +341,25 @@ pub fn js_log(level: String, tag: String, msg: String) {
         "error" => tracing::error!("[JS:{}]: {}", tag, msg),
         "warn" => tracing::warn!("[JS:{}]: {}", tag, msg),
         _ => info!("[JS:{}]: {}", tag, msg),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::cleanup_endpoint;
+
+    #[test]
+    fn ac_0_4_4_quit_removes_socket() {
+        let path =
+            std::env::temp_dir().join(format!("deepseek-pet-quit-{}.sock", std::process::id()));
+        std::fs::write(&path, b"").unwrap();
+        cleanup_endpoint(path.to_str().unwrap());
+        assert!(!path.exists(), "socket file must be removed on quit");
+    }
+
+    #[test]
+    fn ac_0_4_4_quit_leaves_tcp_endpoints_alone() {
+        // must not try to delete a file named like a tcp URL
+        cleanup_endpoint("tcp://127.0.0.1:17361");
     }
 }

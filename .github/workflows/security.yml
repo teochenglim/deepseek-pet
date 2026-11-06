@@ -8,7 +8,7 @@ on:
     branches: [main]
   pull_request:
   schedule:
-    - cron: '0 6 * * 1'   # weekly: new CVEs appear without code changes
+    - cron: '0 6 * * *'   # daily 06:00 UTC: new CVEs appear without code changes
   workflow_dispatch:
 
 permissions:

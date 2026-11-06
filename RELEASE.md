@@ -18,7 +18,7 @@ macOS desktop pet: Tauri v2 shell forked from coding-agent-pet, Big Blue Fish an
 | Release | Theme | Status | Requirements |
 |---|---|---|---|
 | [v1.0.0](RELEASE/v1.0.0.md) | Stable release | planned | R-P1, R-D1, R-M1 |
-| [v0.4.0](RELEASE/v0.4.0.md) | Interaction and priority | planned | R-I1, R-S1 |
+| [v0.4.0](RELEASE/v0.4.0.md) | Interaction and priority | active | R-I1, R-S1 |
 | [v0.3.0](RELEASE/v0.3.0.md) | Claude Code + Z.ai hooks | active | R-H1, R-H2, R-S1 |
 | [v0.2.0](RELEASE/v0.2.0.md) | Asset pipeline | active | R-C1, R-L1 |
 | [v0.1.0](RELEASE/v0.1.0.md) | Skeleton + static fish | active | R-W1, R-W2, R-A1, R-H1 |

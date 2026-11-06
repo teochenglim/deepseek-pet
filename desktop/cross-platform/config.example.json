@@ -94,7 +94,11 @@
   "menu": {
     "items": [
       {
-        "title": "关闭宠物",
+        "title": "Hide for now",
+        "action": "hide"
+      },
+      {
+        "title": "Quit",
         "action": "quit"
       }
     ]

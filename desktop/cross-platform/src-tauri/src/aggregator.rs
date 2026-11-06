@@ -764,6 +764,45 @@ mod tests {
         let _ = fs::remove_dir_all(dir);
     }
 
+    fn agg_with(label: &str, sessions: &[(&str, &str)]) -> (ActivityAggregator, PathBuf) {
+        let dir = temp_dir(label);
+        fs::create_dir_all(&dir).unwrap();
+        let agg = ActivityAggregator::new(dir.to_string_lossy().to_string(), 3600);
+        for (id, state) in sessions {
+            agg.update(id, state, "", "Test", "claude-code", false);
+        }
+        (agg, dir)
+    }
+
+    #[test]
+    fn ac_0_4_3_waiting_beats_running() {
+        let (agg, dir) = agg_with("ac043a", &[("a", "running"), ("b", "waiting")]);
+        assert_eq!(
+            agg.inner.lock().unwrap().aggregated.current_state,
+            "waiting"
+        );
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn ac_0_4_3_running_beats_idle() {
+        let (agg, dir) = agg_with("ac043b", &[("a", "idle"), ("b", "running")]);
+        assert_eq!(
+            agg.inner.lock().unwrap().aggregated.current_state,
+            "running"
+        );
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn ac_0_4_3_failed_only_when_nothing_else() {
+        let (agg, dir) = agg_with("ac043c", &[("a", "failed")]);
+        assert_eq!(agg.inner.lock().unwrap().aggregated.current_state, "failed");
+        agg.update("b", "idle", "", "Test", "zai", false);
+        assert_eq!(agg.inner.lock().unwrap().aggregated.current_state, "idle");
+        let _ = fs::remove_dir_all(dir);
+    }
+
     #[test]
     fn reconcile_paths_overwrites_existing_activity_from_disk() {
         let dir = temp_dir("reconcile");

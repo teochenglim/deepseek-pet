@@ -84,7 +84,7 @@ def find_source(directory, name):
     raise FileNotFoundError(f"{name} not found in {directory}")
 
 
-def convert_state(state, src, out_frames, max_frames):
+def convert_state(state, src, out_frames, max_frames, flip=False):
     with tempfile.TemporaryDirectory() as t:
         tmp = Path(t)
         chosen = pick(decode(src, tmp), max_frames)
@@ -97,7 +97,10 @@ def convert_state(state, src, out_frames, max_frames):
         names = []
         for i, im in enumerate(images):
             name = f"{i:02d}.png"
-            fit(im, box).save(d / name)
+            cell = fit(im, box)
+            if flip:
+                cell = cell.transpose(Image.FLIP_LEFT_RIGHT)
+            cell.save(d / name)
             names.append(name)
     return names
 
@@ -130,10 +133,12 @@ def main(argv=None):
     rows, mapped = {}, {}
     for state in states:
         src = find_source(args.input, state_map[state]["source"])
-        rows[state] = convert_state(state, src, out_frames, args.max_frames)
+        rows[state] = convert_state(state, src, out_frames, args.max_frames,
+                                    flip=bool(state_map[state].get("flip")))
         w, h = probe_size(src)
         mapped[state] = {"source": state_map[state]["source"], "frames": len(rows[state]),
-                         "original_resolution": [w, h], "note": state_map[state].get("note", "")}
+                         "original_resolution": [w, h], "flip": bool(state_map[state].get("flip")),
+                         "note": state_map[state].get("note", "")}
         print(f"{state}: {len(rows[state])} frames from {src.name} ({w}x{h})")
 
     merge_manifest(out_frames / "frames-manifest.json", rows)

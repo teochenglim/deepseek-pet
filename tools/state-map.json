@@ -3,16 +3,37 @@
     "source": "待机呼吸休闲.webm",
     "note": "idle breathing loop"
   },
-  "running-right": {
+  "running": {
     "source": "工作状态-忙碌点按.webm",
-    "note": "busy tapping, used while a tool runs"
+    "note": "busy tapping; hook PreToolUse/PostToolUse/UserPromptSubmit state"
+  },
+  "running-left": {
+    "source": "原地左转奔跑.webm",
+    "note": "run in place; shown while dragging left"
+  },
+  "running-right": {
+    "source": "原地左转奔跑.webm",
+    "flip": true,
+    "note": "same run clip mirrored; shown while dragging right"
   },
   "failed": {
     "source": "工作状态-垂头叹气冒汗.webm",
     "note": "head-down sigh with sweat"
   },
-  "running": {
-    "source": "工作状态-忙碌点按.webm",
-    "note": "same busy-tapping clip; the hook state_map sends PreToolUse to 'running' until 0.3.0 remaps it"
+  "waiting": {
+    "source": "工作状态-原地踱步张望.webm",
+    "note": "pacing and looking around; permission or question pending"
+  },
+  "review": {
+    "source": "工作状态-思考冒泡.webm",
+    "note": "thinking bubbles"
+  },
+  "waving": {
+    "source": "点击回应-元气挥手.webm",
+    "note": "click reaction (one-shot)"
+  },
+  "jumping": {
+    "source": "点击回应-开心跃动.webm",
+    "note": "hover jump and Stop celebration (one-shot)"
   }
 }

@@ -14,16 +14,18 @@
         1280,
         720
       ],
+      "flip": false,
       "note": "idle breathing loop"
     },
     "running-right": {
-      "source": "工作状态-忙碌点按.webm",
+      "source": "原地左转奔跑.webm",
       "frames": 8,
       "original_resolution": [
         1280,
         720
       ],
-      "note": "busy tapping, used while a tool runs"
+      "flip": true,
+      "note": "same run clip mirrored; shown while dragging right"
     },
     "failed": {
       "source": "工作状态-垂头叹气冒汗.webm",
@@ -32,6 +34,7 @@
         1280,
         720
       ],
+      "flip": false,
       "note": "head-down sigh with sweat"
     },
     "running": {
@@ -41,7 +44,58 @@
         1280,
         720
       ],
-      "note": "same busy-tapping clip; the hook state_map sends PreToolUse to 'running' until 0.3.0 remaps it"
+      "flip": false,
+      "note": "busy tapping; hook PreToolUse/PostToolUse/UserPromptSubmit state"
+    },
+    "running-left": {
+      "source": "原地左转奔跑.webm",
+      "frames": 8,
+      "original_resolution": [
+        1280,
+        720
+      ],
+      "flip": false,
+      "note": "run in place; shown while dragging left"
+    },
+    "waiting": {
+      "source": "工作状态-原地踱步张望.webm",
+      "frames": 8,
+      "original_resolution": [
+        1280,
+        720
+      ],
+      "flip": false,
+      "note": "pacing and looking around; permission or question pending"
+    },
+    "review": {
+      "source": "工作状态-思考冒泡.webm",
+      "frames": 8,
+      "original_resolution": [
+        1280,
+        720
+      ],
+      "flip": false,
+      "note": "thinking bubbles"
+    },
+    "waving": {
+      "source": "点击回应-元气挥手.webm",
+      "frames": 8,
+      "original_resolution": [
+        1280,
+        720
+      ],
+      "flip": false,
+      "note": "click reaction (one-shot)"
+    },
+    "jumping": {
+      "source": "点击回应-开心跃动.webm",
+      "frames": 8,
+      "original_resolution": [
+        1280,
+        720
+      ],
+      "flip": false,
+      "note": "hover jump and Stop celebration (one-shot)"
     }
   },
   "unmapped": [
@@ -63,7 +117,6 @@
     "动物环绕.webm",
     "原地专心玩魔方.webm",
     "原地小憩沉眠.webm",
-    "原地左转奔跑.webm",
     "原地敲击桌面互动.webm",
     "原地漂浮踏步.webm",
     "原地跳跃抓碎头顶物品.webm",
@@ -96,8 +149,6 @@
     "女仆屈膝礼仪.webm",
     "小幅度原地360度旋转展示.webm",
     "小提琴演奏.webm",
-    "工作状态-原地踱步张望.webm",
-    "工作状态-思考冒泡.webm",
     "工作状态-清点归档.webm",
     "工作状态-雀跃庆祝.webm",
     "悠闲哼歌.webm",
@@ -119,9 +170,7 @@
     "涮火锅.webm",
     "深度思考碎碎念.webm",
     "点击回应-傲娇生气.webm",
-    "点击回应-元气挥手.webm",
     "点击回应-害羞惊讶.webm",
-    "点击回应-开心跃动.webm",
     "点击回应-挠痒咯咯笑.webm",
     "照镜子.webm",
     "玩水枪.webm",

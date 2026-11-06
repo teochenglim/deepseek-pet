@@ -24,6 +24,17 @@ export function createContextMenu(menuEl, { invokeFn = invoke, windowRef = windo
       } else if (item.action === "quit") {
         appendQuitMenuItem(item.title);
         actionableItems++;
+      } else if (item.action === "hide") {
+        menuEl.appendChild(
+          createMenuItem(
+            item.title || "Hide for now",
+            () => {
+              invokeFn("hide_pet").catch((e) => console.error("[Menu] hide_pet failed:", e));
+            },
+            { variant: "app" },
+          ),
+        );
+        actionableItems++;
       } else if (item.action === "applescript" && item.script) {
         menuEl.appendChild(
           createMenuItem(
@@ -46,7 +57,7 @@ export function createContextMenu(menuEl, { invokeFn = invoke, windowRef = windo
     }
   }
 
-  function appendQuitMenuItem(title = "关闭宠物") {
+  function appendQuitMenuItem(title = "Quit") {
     menuEl.appendChild(
       createMenuItem(
         title,

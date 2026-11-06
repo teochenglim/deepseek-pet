@@ -1,2 +1,2 @@
-# Needed by tools/convert-assets.py and its tests (CI installs this; locally Pillow is usually present)
-pillow==11.3.0
+# Needed by tools/convert-assets.py and its tests. 13.0.0 fixes the CRITICAL/HIGH CVEs Trivy found in 11.3.0.
+pillow==13.0.0

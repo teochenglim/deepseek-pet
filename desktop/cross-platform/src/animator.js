@@ -20,6 +20,10 @@ const STATES = [
 ];
 
 const ONE_SHOT_STATES = new Set(["jumping", "waving"]);
+// Manually triggered clips from the Play animation menu live under "extra:<id>" and play once.
+const EXTRA_PREFIX = "extra:";
+const isExtraState = (state) => String(state).startsWith(EXTRA_PREFIX);
+const isOneShotState = (state) => ONE_SHOT_STATES.has(state) || isExtraState(state);
 const STATE_FPS = {
   idle: 7,
   waiting: 7,
@@ -60,6 +64,7 @@ export class SpriteAnimator {
     this.hitTestReady = false;
     this.pendingOneShot = null; // 当前结束后将触发的排队一次性动画
     this.hoverJumpCyclesRemaining = 0;
+    this.extraFps = new Map(); // extra:<id> -> fps
   }
 
   async loadImage(nativePath) {
@@ -226,9 +231,10 @@ export class SpriteAnimator {
       return;
     }
     // 若当前处于一次性动画中，则更新还原目标
-    if (ONE_SHOT_STATES.has(this.currentState) && !ONE_SHOT_STATES.has(state)) {
+    if (isOneShotState(this.currentState) && !isOneShotState(state)) {
       this.preOneShotState = state;
     }
+    const leaving = this.currentState;
     this.currentState = state;
     this.currentFrameIndex = 0;
     this.resetHold();
@@ -236,19 +242,58 @@ export class SpriteAnimator {
     this.ensureAlphaMasksForStates([state]).catch(() => {});
     this.pruneAlphaMasks();
     this.updatePlaybackRate();
+    this.releaseExtra(leaving);
+  }
+
+  /** Load one extra clip on demand (never at startup) and play it once, then return to the
+   *  previous state. `clip` is {id, frames, fps} from extras/catalog.json. */
+  async playExtra(clip, framesDir) {
+    const state = `${EXTRA_PREFIX}${clip.id}`;
+    if (!this.frames[state]) {
+      const loaded = await Promise.all(
+        Array.from({ length: clip.frames }, async (_, i) => {
+          const nativePath = `${framesDir}/extras/${clip.id}/${String(i).padStart(2, "0")}.png`;
+          const img = await this.loadImage(nativePath);
+          return img ? { img, nativePath } : null;
+        }),
+      );
+      const ok = loaded.filter(Boolean);
+      if (ok.length === 0) return false;
+      this.frames[state] = ok.map((r) => r.img);
+      this.framePaths[state] = ok.map((r) => r.nativePath);
+    }
+    this.extraFps.set(state, Number(clip.fps) || 8);
+    this.triggerOneShot(state);
+    return true;
+  }
+
+  /** Free an extra clip once it is no longer on screen (decoded frames are the memory cost). */
+  releaseExtra(state) {
+    if (!isExtraState(state) || state === this.currentState || state === this.pendingOneShot)
+      return;
+    for (const img of this.frames[state] || []) {
+      const url = img?.dataset?.objectUrl;
+      if (url && typeof URL !== "undefined") URL.revokeObjectURL(url);
+    }
+    delete this.frames[state];
+    delete this.framePaths[state];
+    this.alphaMasks.delete(state);
+    this.alphaMaskLoadPromises.delete(state);
+    this.extraFps.delete(state);
+    this.hitTestReady = this.alphaMasks.size > 0;
   }
 
   /** 触发一次性动画（jumping、waving）。
    *  若已有一次性动画在播放，则新的会被排队，在当前动画结束后触发——避免
    *  重复的 Stop 事件被静默吞掉。 */
   triggerOneShot(state) {
-    if (!ONE_SHOT_STATES.has(state)) return;
+    if (!isOneShotState(state)) return;
     if (!this.frames[state]) return;
     if (this.isHoverJumping()) {
       this.stopHoverJump({ showFrame: false });
     }
     // 若已有一次性动画在播放，则排队
-    if (ONE_SHOT_STATES.has(this.currentState)) {
+    if (isOneShotState(this.currentState)) {
       this.pendingOneShot = state;
       return;
     }
@@ -494,7 +539,8 @@ export class SpriteAnimator {
   }
 
   getTargetFps() {
-    const stateFps = STATE_FPS[this.currentState] ?? this.fps;
+    const stateFps =
+      STATE_FPS[this.currentState] ?? this.extraFps.get(this.currentState) ?? this.fps;
     if (this.isFocused) return stateFps;
     return Math.max(MIN_BACKGROUND_FPS, Math.round(stateFps * BACKGROUND_FPS_FACTOR));
   }
@@ -523,6 +569,7 @@ export class SpriteAnimator {
 
     this.holdRemaining--;
     if (this.holdRemaining > 0) return;
+    const stateAtTickStart = this.currentState;
 
     this.currentFrameIndex++;
 
@@ -544,7 +591,7 @@ export class SpriteAnimator {
         this.updatePlaybackRate();
       }
       // 一次性：播放完整一轮后回到之前的状态（或触发排队的一次性动画）
-    } else if (ONE_SHOT_STATES.has(this.currentState) && this.currentFrameIndex >= frames.length) {
+    } else if (isOneShotState(this.currentState) && this.currentFrameIndex >= frames.length) {
       if (this.pendingOneShot) {
         const next = this.pendingOneShot;
         this.pendingOneShot = null;
@@ -562,6 +609,10 @@ export class SpriteAnimator {
       this.resetHold();
     }
 
+    if (stateAtTickStart !== this.currentState) {
+      this.updatePlaybackRate();
+      this.releaseExtra(stateAtTickStart);
+    }
     this.showCurrentFrame();
   }
 

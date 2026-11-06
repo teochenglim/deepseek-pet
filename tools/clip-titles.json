@@ -1,0 +1,426 @@
+{
+ "点击回应-害羞惊讶": [
+  "Shy surprise",
+  "Click reactions"
+ ],
+ "点击回应-开心跃动": [
+  "Happy bounce",
+  "Click reactions"
+ ],
+ "点击回应-傲娇生气": [
+  "Tsundere anger",
+  "Click reactions"
+ ],
+ "点击回应-元气挥手": [
+  "Energetic wave",
+  "Click reactions"
+ ],
+ "点击回应-挠痒咯咯笑": [
+  "Tickled giggling",
+  "Click reactions"
+ ],
+ "工作状态-垂头叹气冒汗": [
+  "Sigh and sweat",
+  "Work"
+ ],
+ "工作状态-原地踱步张望": [
+  "Pacing and looking around",
+  "Work"
+ ],
+ "工作状态-清点归档": [
+  "Sorting and filing",
+  "Work"
+ ],
+ "工作状态-忙碌点按": [
+  "Busy tapping",
+  "Work"
+ ],
+ "工作状态-雀跃庆祝": [
+  "Joyful celebration",
+  "Work"
+ ],
+ "工作状态-思考冒泡": [
+  "Thinking bubbles",
+  "Work"
+ ],
+ "写代码": [
+  "Writing code",
+  "Work"
+ ],
+ "轻快记录": [
+  "Briskly taking notes",
+  "Work"
+ ],
+ "深度思考碎碎念": [
+  "Deep-thinking mutter",
+  "Work"
+ ],
+ "吃Token": [
+  "Eating tokens",
+  "Work"
+ ],
+ "余额-钱袋如常": [
+  "Purse as usual",
+  "Balance"
+ ],
+ "余额-数金皱眉": [
+  "Counting gold, frowning",
+  "Balance"
+ ],
+ "余额-袋空如洗": [
+  "Empty purse",
+  "Balance"
+ ],
+ "余额-金袋叮当": [
+  "Jingling gold purse",
+  "Balance"
+ ],
+ "余额-钱袋满溢": [
+  "Overflowing purse",
+  "Balance"
+ ],
+ "余额-分文不剩": [
+  "Not a coin left",
+  "Balance"
+ ],
+ "碎碎念-对屏碎碎念": [
+  "Muttering at the screen",
+  "Muttering"
+ ],
+ "碎碎念-擦桌碎碎念": [
+  "Wiping the desk, muttering",
+  "Muttering"
+ ],
+ "碎碎念-发呆碎碎念": [
+  "Daydreaming, muttering",
+  "Muttering"
+ ],
+ "偷吃零食被抓住": [
+  "Caught sneaking snacks",
+  "Meals and snacks"
+ ],
+ "吃西瓜": [
+  "Eating watermelon",
+  "Meals and snacks"
+ ],
+ "吃糖葫芦": [
+  "Eating candied haws",
+  "Meals and snacks"
+ ],
+ "吃冰淇淋融化": [
+  "Ice cream melting",
+  "Meals and snacks"
+ ],
+ "吃白饭": [
+  "Eating plain rice",
+  "Meals and snacks"
+ ],
+ "吃晚餐": [
+  "Eating dinner",
+  "Meals and snacks"
+ ],
+ "大口吃零食": [
+  "Gobbling snacks",
+  "Meals and snacks"
+ ],
+ "吃午餐": [
+  "Eating lunch",
+  "Meals and snacks"
+ ],
+ "吃早餐": [
+  "Eating breakfast",
+  "Meals and snacks"
+ ],
+ "涮火锅": [
+  "Hot pot",
+  "Meals and snacks"
+ ],
+ "是啊，吃什么": [
+  "Yes, but what to eat?",
+  "Meals and snacks"
+ ],
+ "晨间刷牙": [
+  "Brushing teeth",
+  "Meals and snacks"
+ ],
+ "写福字": [
+  "Writing the 福 character",
+  "Festivals"
+ ],
+ "放风筝": [
+  "Flying a kite",
+  "Festivals"
+ ],
+ "放烟花": [
+  "Setting off fireworks",
+  "Festivals"
+ ],
+ "吃年糕": [
+  "Eating rice cake",
+  "Festivals"
+ ],
+ "穿针乞巧": [
+  "Threading a needle (Qixi)",
+  "Festivals"
+ ],
+ "吃汤圆": [
+  "Eating tangyuan",
+  "Festivals"
+ ],
+ "吃饺子": [
+  "Eating dumplings",
+  "Festivals"
+ ],
+ "舞狮头": [
+  "Lion dance head",
+  "Festivals"
+ ],
+ "插茱萸赏菊": [
+  "Cornel and chrysanthemums",
+  "Festivals"
+ ],
+ "吃长寿面": [
+  "Eating longevity noodles",
+  "Festivals"
+ ],
+ "放河灯": [
+  "Floating river lanterns",
+  "Festivals"
+ ],
+ "中秋赏月吃月饼": [
+  "Mid-Autumn moon and mooncake",
+  "Festivals"
+ ],
+ "收红包": [
+  "Receiving a red packet",
+  "Festivals"
+ ],
+ "吃重阳糕": [
+  "Eating Double Ninth cake",
+  "Festivals"
+ ],
+ "放孔明灯": [
+  "Releasing a sky lantern",
+  "Festivals"
+ ],
+ "吃粽子": [
+  "Eating zongzi",
+  "Festivals"
+ ],
+ "讨糖南瓜灯": [
+  "Trick-or-treat pumpkin lantern",
+  "Festivals"
+ ],
+ "吃青团": [
+  "Eating qingtuan",
+  "Festivals"
+ ],
+ "吃腊八粥": [
+  "Eating Laba porridge",
+  "Festivals"
+ ],
+ "堆雪人": [
+  "Building a snowman",
+  "Festivals"
+ ],
+ "装点圣诞树": [
+  "Decorating the Christmas tree",
+  "Festivals"
+ ],
+ "吃大闸蟹": [
+  "Eating hairy crab",
+  "Festivals"
+ ],
+ "拆礼物": [
+  "Unwrapping gifts",
+  "Festivals"
+ ],
+ "被落叶淹没": [
+  "Buried in fallen leaves",
+  "Festivals"
+ ],
+ "玩水枪": [
+  "Playing with a water gun",
+  "Play and hobbies"
+ ],
+ "抽陀螺": [
+  "Spinning a top",
+  "Play and hobbies"
+ ],
+ "荡秋千": [
+  "Swinging",
+  "Play and hobbies"
+ ],
+ "小提琴演奏": [
+  "Playing the violin",
+  "Play and hobbies"
+ ],
+ "摇扇纳凉": [
+  "Fanning to cool off",
+  "Play and hobbies"
+ ],
+ "扑克魔术": [
+  "Card magic",
+  "Play and hobbies"
+ ],
+ "吹气球": [
+  "Blowing a balloon",
+  "Play and hobbies"
+ ],
+ "三球抛接": [
+  "Juggling three balls",
+  "Play and hobbies"
+ ],
+ "骑木马": [
+  "Riding a rocking horse",
+  "Play and hobbies"
+ ],
+ "原地专心玩魔方": [
+  "Solving a Rubik's cube",
+  "Play and hobbies"
+ ],
+ "撸猫": [
+  "Petting a cat",
+  "Play and hobbies"
+ ],
+ "玩游戏气急败坏": [
+  "Raging while gaming",
+  "Play and hobbies"
+ ],
+ "踢毽子": [
+  "Kicking a shuttlecock",
+  "Play and hobbies"
+ ],
+ "吹笛子": [
+  "Playing the flute",
+  "Play and hobbies"
+ ],
+ "下五子棋": [
+  "Playing gomoku",
+  "Play and hobbies"
+ ],
+ "可爱宅舞": [
+  "Cute otaku dance",
+  "Play and hobbies"
+ ],
+ "优雅女仆舞": [
+  "Elegant maid dance",
+  "Play and hobbies"
+ ],
+ "轻快摇摆舞": [
+  "Light swaying dance",
+  "Play and hobbies"
+ ],
+ "照镜子": [
+  "Looking in the mirror",
+  "Play and hobbies"
+ ],
+ "整体换装试色": [
+  "Trying outfits and colours",
+  "Play and hobbies"
+ ],
+ "原地跳跃抓碎头顶物品": [
+  "Jumping to grab things overhead",
+  "Moods and movement"
+ ],
+ "打瞌睡被惊醒": [
+  "Startled awake from a nap",
+  "Moods and movement"
+ ],
+ "女仆屈膝礼仪": [
+  "Maid curtsy",
+  "Moods and movement"
+ ],
+ "原地重力下蹲压缩": [
+  "Squashing down under gravity",
+  "Moods and movement"
+ ],
+ "哈欠连天": [
+  "Yawning",
+  "Moods and movement"
+ ],
+ "悠闲哼歌": [
+  "Humming leisurely",
+  "Moods and movement"
+ ],
+ "原地小憩沉眠": [
+  "Dozing off",
+  "Moods and movement"
+ ],
+ "原地敲击桌面互动": [
+  "Tapping the desk",
+  "Moods and movement"
+ ],
+ "原地蹲下玩玩具汽车": [
+  "Crouching with a toy car",
+  "Moods and movement"
+ ],
+ "原地左转奔跑": [
+  "Running in place",
+  "Moods and movement"
+ ],
+ "原地漂浮踏步": [
+  "Floating in place",
+  "Moods and movement"
+ ],
+ "被鼠标拖拽悬空反馈": [
+  "Dangling when dragged",
+  "Moods and movement"
+ ],
+ "东张西望": [
+  "Looking around",
+  "Moods and movement"
+ ],
+ "被吓一跳": [
+  "Startled",
+  "Moods and movement"
+ ],
+ "待机呼吸休闲": [
+  "Idle breathing",
+  "Moods and movement"
+ ],
+ "螃蟹走路": [
+  "Crab walk",
+  "Moods and movement"
+ ],
+ "超大伸懒腰": [
+  "Huge stretch",
+  "Moods and movement"
+ ],
+ "小幅度原地360度旋转展示": [
+  "Slow 360 turn",
+  "Moods and movement"
+ ],
+ "鲸鱼吐泡泡特效": [
+  "Whale blowing bubbles",
+  "Magic and animals"
+ ],
+ "用鲸鱼尾巴拍打地面": [
+  "Slapping the ground with the whale tail",
+  "Magic and animals"
+ ],
+ "变鸽子": [
+  "Turning into a pigeon",
+  "Magic and animals"
+ ],
+ "蝴蝶蜜蜂环绕头顶开花": [
+  "Butterflies and bees, blooming head",
+  "Magic and animals"
+ ],
+ "动物环绕": [
+  "Surrounded by animals",
+  "Magic and animals"
+ ],
+ "萌化小幽灵": [
+  "Cute little ghost",
+  "Magic and animals"
+ ],
+ "蓝鲸现世": [
+  "A blue whale appears",
+  "Magic and animals"
+ ],
+ "凭空生花": [
+  "Flowers out of thin air",
+  "Magic and animals"
+ ]
+}

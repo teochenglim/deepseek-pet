@@ -100,6 +100,14 @@ async function main() {
     bubble.show(dialogue, active_count, state, false, hookEvent, pending_permission_count);
   });
 
+  // Play animation menu (menu-bar icon): the backend sends {id, frames, fps} for the chosen clip
+  const unlistenPlay = await listen("play-animation", (event) => {
+    animator
+      .playExtra(event.payload, config.frames_dir)
+      .then((ok) => jsLog("info", "Main", `play-animation ${event.payload?.id} ok=${ok}`))
+      .catch((e) => jsLog("error", "Main", `play-animation failed: ${e}`));
+  });
+
   menu.build(config.menu_items);
   const interactions = setupInteractions({ animator, menu, bubble, petSprite, jsLog });
 
@@ -108,6 +116,7 @@ async function main() {
     if (cleanedUp) return;
     cleanedUp = true;
     unlistenStateChange();
+    unlistenPlay();
     interactions.stop();
     menu.stop();
     animator.stop();

@@ -3,8 +3,10 @@
 #![allow(unexpected_cfgs)]
 
 mod aggregator;
+mod catalog;
 mod commands;
 mod config;
+mod menus;
 mod watcher;
 
 use aggregator::ActivityAggregator;
@@ -86,6 +88,12 @@ pub fn run() {
             }
             _ => {}
         })
+        .on_menu_event(|app, event| {
+            // popup menus (the pet's right-click "Play animation"); tray ids have no prefix
+            if let Some(action) = menus::parse_action(event.id.as_ref(), menus::POPUP_PREFIX) {
+                menus::run(app, action);
+            }
+        })
         .setup(|app| {
             // 1. 加载配置
             let config = PetConfig::load();
@@ -159,6 +167,9 @@ pub fn run() {
                 }
             });
 
+            app.manage(menus::PlayCatalog(Arc::new(catalog::load(
+                &config.frames_dir,
+            ))));
             // 10. 存储配置 + 聚合器，供前端 / 命令访问
             let endpoint_for_guard = config.event_endpoint.clone();
             app.manage(session_mgr.clone());
@@ -169,20 +180,29 @@ pub fn run() {
                 endpoint: endpoint_for_guard,
             });
 
-            // 11. Menu-bar icon: restores a hidden pet and offers Quit
+            // 11. Menu-bar icon: restores a hidden pet, plays any clip on demand, quits
             {
-                use tauri::menu::{Menu, MenuItem};
+                use tauri::menu::{IsMenuItem, Menu, MenuItem, Submenu};
                 use tauri::tray::TrayIconBuilder;
+                let clips = app.state::<menus::PlayCatalog>().0.clone();
                 let show =
                     MenuItem::with_id(app, "show", "Show Big Blue Fish", true, None::<&str>)?;
+                let play = Submenu::with_id(app, "play", "Play animation", !clips.is_empty())?;
+                let (random, categories) = menus::play_entries(app.handle(), &clips, "")?;
+                play.append(&random)?;
+                let items: Vec<&dyn IsMenuItem<tauri::Wry>> = categories
+                    .iter()
+                    .map(|c| c as &dyn IsMenuItem<tauri::Wry>)
+                    .collect();
+                play.append_items(&items)?;
                 let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-                let menu = Menu::with_items(app, &[&show, &quit])?;
+                let menu = Menu::with_items(app, &[&show, &play, &quit])?;
                 let mut tray = TrayIconBuilder::new()
                     .menu(&menu)
-                    .on_menu_event(|app, event| match event.id.as_ref() {
-                        "show" => commands::show_pet(app),
-                        "quit" => commands::shutdown(app),
-                        _ => {}
+                    .on_menu_event(|app, event| {
+                        if let Some(action) = menus::parse_action(event.id.as_ref(), "") {
+                            menus::run(app, action);
+                        }
                     });
                 let icon = tauri::image::Image::from_bytes(include_bytes!("../icons/tray.png"))?;
                 tray = tray.icon(icon).icon_as_template(false);
@@ -198,6 +218,7 @@ pub fn run() {
             commands::run_applescript,
             commands::quit_app,
             commands::hide_pet,
+            commands::show_pet_menu,
             commands::purge_all_sessions,
             commands::read_file_bytes,
             commands::read_frames_batch,

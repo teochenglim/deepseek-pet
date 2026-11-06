@@ -60,6 +60,10 @@ check: fmt-check clippy lint-frontend ac-map test version-check ## Everything CI
 convert-assets: ## (0.2.0) WebM -> frames; needs ffmpeg + Pillow
 	python3 tools/convert-assets.py --input $(FISH_DIR) --output assets/big-blue-fish
 
+.PHONY: convert-extras
+convert-extras: ## (0.6.0) every clip -> frames/extras for the Play animation menu
+	python3 tools/convert-assets.py --extras --input $(FISH_DIR) --output assets/big-blue-fish
+
 .PHONY: clean
 clean: ## Remove cargo build artifacts
 	cargo clean --manifest-path $(MANIFEST)

@@ -1,0 +1,1065 @@
+{
+ "version": 1,
+ "clips": [
+  {
+   "id": "c001",
+   "title": "Juggling three balls",
+   "title_zh": "三球抛接",
+   "category": "Play and hobbies",
+   "frames": 16,
+   "fps": 8,
+   "source": "三球抛接.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c002",
+   "title": "Playing gomoku",
+   "title_zh": "下五子棋",
+   "category": "Play and hobbies",
+   "frames": 16,
+   "fps": 8,
+   "source": "下五子棋.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c003",
+   "title": "Looking around",
+   "title_zh": "东张西望",
+   "category": "Moods and movement",
+   "frames": 16,
+   "fps": 8,
+   "source": "东张西望.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c004",
+   "title": "Mid-Autumn moon and mooncake",
+   "title_zh": "中秋赏月吃月饼",
+   "category": "Festivals",
+   "frames": 16,
+   "fps": 8,
+   "source": "中秋赏月吃月饼.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c005",
+   "title": "Elegant maid dance",
+   "title_zh": "优雅女仆舞",
+   "category": "Play and hobbies",
+   "frames": 16,
+   "fps": 8,
+   "source": "优雅女仆舞.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c006",
+   "title": "Not a coin left",
+   "title_zh": "余额-分文不剩",
+   "category": "Balance",
+   "frames": 16,
+   "fps": 8,
+   "source": "余额-分文不剩.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c007",
+   "title": "Counting gold, frowning",
+   "title_zh": "余额-数金皱眉",
+   "category": "Balance",
+   "frames": 16,
+   "fps": 8,
+   "source": "余额-数金皱眉.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c008",
+   "title": "Empty purse",
+   "title_zh": "余额-袋空如洗",
+   "category": "Balance",
+   "frames": 16,
+   "fps": 8,
+   "source": "余额-袋空如洗.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c009",
+   "title": "Jingling gold purse",
+   "title_zh": "余额-金袋叮当",
+   "category": "Balance",
+   "frames": 16,
+   "fps": 8,
+   "source": "余额-金袋叮当.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c010",
+   "title": "Purse as usual",
+   "title_zh": "余额-钱袋如常",
+   "category": "Balance",
+   "frames": 16,
+   "fps": 8,
+   "source": "余额-钱袋如常.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c011",
+   "title": "Overflowing purse",
+   "title_zh": "余额-钱袋满溢",
+   "category": "Balance",
+   "frames": 16,
+   "fps": 8,
+   "source": "余额-钱袋满溢.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c012",
+   "title": "Caught sneaking snacks",
+   "title_zh": "偷吃零食被抓住",
+   "category": "Meals and snacks",
+   "frames": 16,
+   "fps": 8,
+   "source": "偷吃零食被抓住.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c013",
+   "title": "Writing code",
+   "title_zh": "写代码",
+   "category": "Work",
+   "frames": 16,
+   "fps": 8,
+   "source": "写代码.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c014",
+   "title": "Writing the 福 character",
+   "title_zh": "写福字",
+   "category": "Festivals",
+   "frames": 16,
+   "fps": 8,
+   "source": "写福字.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c015",
+   "title": "Flowers out of thin air",
+   "title_zh": "凭空生花",
+   "category": "Magic and animals",
+   "frames": 16,
+   "fps": 8,
+   "source": "凭空生花.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c016",
+   "title": "Surrounded by animals",
+   "title_zh": "动物环绕",
+   "category": "Magic and animals",
+   "frames": 16,
+   "fps": 8,
+   "source": "动物环绕.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c017",
+   "title": "Solving a Rubik's cube",
+   "title_zh": "原地专心玩魔方",
+   "category": "Play and hobbies",
+   "frames": 16,
+   "fps": 8,
+   "source": "原地专心玩魔方.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c018",
+   "title": "Dozing off",
+   "title_zh": "原地小憩沉眠",
+   "category": "Moods and movement",
+   "frames": 16,
+   "fps": 8,
+   "source": "原地小憩沉眠.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c019",
+   "title": "Running in place",
+   "title_zh": "原地左转奔跑",
+   "category": "Moods and movement",
+   "frames": 16,
+   "fps": 8,
+   "source": "原地左转奔跑.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c020",
+   "title": "Tapping the desk",
+   "title_zh": "原地敲击桌面互动",
+   "category": "Moods and movement",
+   "frames": 16,
+   "fps": 8,
+   "source": "原地敲击桌面互动.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c021",
+   "title": "Floating in place",
+   "title_zh": "原地漂浮踏步",
+   "category": "Moods and movement",
+   "frames": 16,
+   "fps": 8,
+   "source": "原地漂浮踏步.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c022",
+   "title": "Jumping to grab things overhead",
+   "title_zh": "原地跳跃抓碎头顶物品",
+   "category": "Moods and movement",
+   "frames": 16,
+   "fps": 8,
+   "source": "原地跳跃抓碎头顶物品.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c023",
+   "title": "Crouching with a toy car",
+   "title_zh": "原地蹲下玩玩具汽车",
+   "category": "Moods and movement",
+   "frames": 16,
+   "fps": 8,
+   "source": "原地蹲下玩玩具汽车.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c024",
+   "title": "Squashing down under gravity",
+   "title_zh": "原地重力下蹲压缩",
+   "category": "Moods and movement",
+   "frames": 16,
+   "fps": 8,
+   "source": "原地重力下蹲压缩.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c025",
+   "title": "Turning into a pigeon",
+   "title_zh": "变鸽子",
+   "category": "Magic and animals",
+   "frames": 16,
+   "fps": 8,
+   "source": "变鸽子.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c026",
+   "title": "Cute otaku dance",
+   "title_zh": "可爱宅舞",
+   "category": "Play and hobbies",
+   "frames": 16,
+   "fps": 8,
+   "source": "可爱宅舞.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c027",
+   "title": "Eating tokens",
+   "title_zh": "吃Token",
+   "category": "Work",
+   "frames": 16,
+   "fps": 8,
+   "source": "吃Token.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c028",
+   "title": "Ice cream melting",
+   "title_zh": "吃冰淇淋融化",
+   "category": "Meals and snacks",
+   "frames": 16,
+   "fps": 8,
+   "source": "吃冰淇淋融化.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c029",
+   "title": "Eating lunch",
+   "title_zh": "吃午餐",
+   "category": "Meals and snacks",
+   "frames": 16,
+   "fps": 8,
+   "source": "吃午餐.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c030",
+   "title": "Eating hairy crab",
+   "title_zh": "吃大闸蟹",
+   "category": "Festivals",
+   "frames": 16,
+   "fps": 8,
+   "source": "吃大闸蟹.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c031",
+   "title": "Eating rice cake",
+   "title_zh": "吃年糕",
+   "category": "Festivals",
+   "frames": 16,
+   "fps": 8,
+   "source": "吃年糕.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c032",
+   "title": "Eating breakfast",
+   "title_zh": "吃早餐",
+   "category": "Meals and snacks",
+   "frames": 16,
+   "fps": 8,
+   "source": "吃早餐.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c033",
+   "title": "Eating dinner",
+   "title_zh": "吃晚餐",
+   "category": "Meals and snacks",
+   "frames": 16,
+   "fps": 8,
+   "source": "吃晚餐.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c034",
+   "title": "Eating tangyuan",
+   "title_zh": "吃汤圆",
+   "category": "Festivals",
+   "frames": 16,
+   "fps": 8,
+   "source": "吃汤圆.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c035",
+   "title": "Eating plain rice",
+   "title_zh": "吃白饭",
+   "category": "Meals and snacks",
+   "frames": 16,
+   "fps": 8,
+   "source": "吃白饭.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c036",
+   "title": "Eating zongzi",
+   "title_zh": "吃粽子",
+   "category": "Festivals",
+   "frames": 16,
+   "fps": 8,
+   "source": "吃粽子.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c037",
+   "title": "Eating candied haws",
+   "title_zh": "吃糖葫芦",
+   "category": "Meals and snacks",
+   "frames": 16,
+   "fps": 8,
+   "source": "吃糖葫芦.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c038",
+   "title": "Eating Laba porridge",
+   "title_zh": "吃腊八粥",
+   "category": "Festivals",
+   "frames": 16,
+   "fps": 8,
+   "source": "吃腊八粥.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c039",
+   "title": "Eating watermelon",
+   "title_zh": "吃西瓜",
+   "category": "Meals and snacks",
+   "frames": 16,
+   "fps": 8,
+   "source": "吃西瓜.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c040",
+   "title": "Eating Double Ninth cake",
+   "title_zh": "吃重阳糕",
+   "category": "Festivals",
+   "frames": 16,
+   "fps": 8,
+   "source": "吃重阳糕.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c041",
+   "title": "Eating longevity noodles",
+   "title_zh": "吃长寿面",
+   "category": "Festivals",
+   "frames": 16,
+   "fps": 8,
+   "source": "吃长寿面.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c042",
+   "title": "Eating qingtuan",
+   "title_zh": "吃青团",
+   "category": "Festivals",
+   "frames": 16,
+   "fps": 8,
+   "source": "吃青团.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c043",
+   "title": "Eating dumplings",
+   "title_zh": "吃饺子",
+   "category": "Festivals",
+   "frames": 16,
+   "fps": 8,
+   "source": "吃饺子.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c044",
+   "title": "Blowing a balloon",
+   "title_zh": "吹气球",
+   "category": "Play and hobbies",
+   "frames": 16,
+   "fps": 8,
+   "source": "吹气球.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c045",
+   "title": "Playing the flute",
+   "title_zh": "吹笛子",
+   "category": "Play and hobbies",
+   "frames": 16,
+   "fps": 8,
+   "source": "吹笛子.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c046",
+   "title": "Yawning",
+   "title_zh": "哈欠连天",
+   "category": "Moods and movement",
+   "frames": 16,
+   "fps": 8,
+   "source": "哈欠连天.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c047",
+   "title": "Building a snowman",
+   "title_zh": "堆雪人",
+   "category": "Festivals",
+   "frames": 16,
+   "fps": 8,
+   "source": "堆雪人.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c048",
+   "title": "Gobbling snacks",
+   "title_zh": "大口吃零食",
+   "category": "Meals and snacks",
+   "frames": 16,
+   "fps": 8,
+   "source": "大口吃零食.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c049",
+   "title": "Maid curtsy",
+   "title_zh": "女仆屈膝礼仪",
+   "category": "Moods and movement",
+   "frames": 16,
+   "fps": 8,
+   "source": "女仆屈膝礼仪.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c050",
+   "title": "Slow 360 turn",
+   "title_zh": "小幅度原地360度旋转展示",
+   "category": "Moods and movement",
+   "frames": 16,
+   "fps": 8,
+   "source": "小幅度原地360度旋转展示.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c051",
+   "title": "Playing the violin",
+   "title_zh": "小提琴演奏",
+   "category": "Play and hobbies",
+   "frames": 16,
+   "fps": 8,
+   "source": "小提琴演奏.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c052",
+   "title": "Pacing and looking around",
+   "title_zh": "工作状态-原地踱步张望",
+   "category": "Work",
+   "frames": 16,
+   "fps": 8,
+   "source": "工作状态-原地踱步张望.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c053",
+   "title": "Sigh and sweat",
+   "title_zh": "工作状态-垂头叹气冒汗",
+   "category": "Work",
+   "frames": 16,
+   "fps": 8,
+   "source": "工作状态-垂头叹气冒汗.webm",
+   "duration_sec": 4.92
+  },
+  {
+   "id": "c054",
+   "title": "Busy tapping",
+   "title_zh": "工作状态-忙碌点按",
+   "category": "Work",
+   "frames": 16,
+   "fps": 8,
+   "source": "工作状态-忙碌点按.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c055",
+   "title": "Thinking bubbles",
+   "title_zh": "工作状态-思考冒泡",
+   "category": "Work",
+   "frames": 16,
+   "fps": 8,
+   "source": "工作状态-思考冒泡.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c056",
+   "title": "Sorting and filing",
+   "title_zh": "工作状态-清点归档",
+   "category": "Work",
+   "frames": 16,
+   "fps": 8,
+   "source": "工作状态-清点归档.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c057",
+   "title": "Joyful celebration",
+   "title_zh": "工作状态-雀跃庆祝",
+   "category": "Work",
+   "frames": 16,
+   "fps": 8,
+   "source": "工作状态-雀跃庆祝.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c058",
+   "title": "Idle breathing",
+   "title_zh": "待机呼吸休闲",
+   "category": "Moods and movement",
+   "frames": 16,
+   "fps": 8,
+   "source": "待机呼吸休闲.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c059",
+   "title": "Humming leisurely",
+   "title_zh": "悠闲哼歌",
+   "category": "Moods and movement",
+   "frames": 16,
+   "fps": 8,
+   "source": "悠闲哼歌.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c060",
+   "title": "Card magic",
+   "title_zh": "扑克魔术",
+   "category": "Play and hobbies",
+   "frames": 16,
+   "fps": 8,
+   "source": "扑克魔术.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c061",
+   "title": "Startled awake from a nap",
+   "title_zh": "打瞌睡被惊醒",
+   "category": "Moods and movement",
+   "frames": 16,
+   "fps": 8,
+   "source": "打瞌睡被惊醒.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c062",
+   "title": "Spinning a top",
+   "title_zh": "抽陀螺",
+   "category": "Play and hobbies",
+   "frames": 16,
+   "fps": 8,
+   "source": "抽陀螺.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c063",
+   "title": "Unwrapping gifts",
+   "title_zh": "拆礼物",
+   "category": "Festivals",
+   "frames": 16,
+   "fps": 8,
+   "source": "拆礼物.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c064",
+   "title": "Cornel and chrysanthemums",
+   "title_zh": "插茱萸赏菊",
+   "category": "Festivals",
+   "frames": 16,
+   "fps": 8,
+   "source": "插茱萸赏菊.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c065",
+   "title": "Fanning to cool off",
+   "title_zh": "摇扇纳凉",
+   "category": "Play and hobbies",
+   "frames": 16,
+   "fps": 8,
+   "source": "摇扇纳凉.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c066",
+   "title": "Petting a cat",
+   "title_zh": "撸猫",
+   "category": "Play and hobbies",
+   "frames": 16,
+   "fps": 8,
+   "source": "撸猫.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c067",
+   "title": "Receiving a red packet",
+   "title_zh": "收红包",
+   "category": "Festivals",
+   "frames": 16,
+   "fps": 8,
+   "source": "收红包.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c068",
+   "title": "Releasing a sky lantern",
+   "title_zh": "放孔明灯",
+   "category": "Festivals",
+   "frames": 16,
+   "fps": 8,
+   "source": "放孔明灯.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c069",
+   "title": "Floating river lanterns",
+   "title_zh": "放河灯",
+   "category": "Festivals",
+   "frames": 16,
+   "fps": 8,
+   "source": "放河灯.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c070",
+   "title": "Setting off fireworks",
+   "title_zh": "放烟花",
+   "category": "Festivals",
+   "frames": 16,
+   "fps": 8,
+   "source": "放烟花.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c071",
+   "title": "Flying a kite",
+   "title_zh": "放风筝",
+   "category": "Festivals",
+   "frames": 16,
+   "fps": 8,
+   "source": "放风筝.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c072",
+   "title": "Trying outfits and colours",
+   "title_zh": "整体换装试色",
+   "category": "Play and hobbies",
+   "frames": 16,
+   "fps": 8,
+   "source": "整体换装试色.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c073",
+   "title": "Yes, but what to eat?",
+   "title_zh": "是啊，吃什么",
+   "category": "Meals and snacks",
+   "frames": 16,
+   "fps": 8,
+   "source": "是啊，吃什么.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c074",
+   "title": "Brushing teeth",
+   "title_zh": "晨间刷牙",
+   "category": "Meals and snacks",
+   "frames": 16,
+   "fps": 8,
+   "source": "晨间刷牙.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c075",
+   "title": "Hot pot",
+   "title_zh": "涮火锅",
+   "category": "Meals and snacks",
+   "frames": 16,
+   "fps": 8,
+   "source": "涮火锅.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c076",
+   "title": "Deep-thinking mutter",
+   "title_zh": "深度思考碎碎念",
+   "category": "Work",
+   "frames": 16,
+   "fps": 8,
+   "source": "深度思考碎碎念.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c077",
+   "title": "Tsundere anger",
+   "title_zh": "点击回应-傲娇生气",
+   "category": "Click reactions",
+   "frames": 16,
+   "fps": 8,
+   "source": "点击回应-傲娇生气.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c078",
+   "title": "Energetic wave",
+   "title_zh": "点击回应-元气挥手",
+   "category": "Click reactions",
+   "frames": 16,
+   "fps": 8,
+   "source": "点击回应-元气挥手.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c079",
+   "title": "Shy surprise",
+   "title_zh": "点击回应-害羞惊讶",
+   "category": "Click reactions",
+   "frames": 16,
+   "fps": 8,
+   "source": "点击回应-害羞惊讶.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c080",
+   "title": "Happy bounce",
+   "title_zh": "点击回应-开心跃动",
+   "category": "Click reactions",
+   "frames": 16,
+   "fps": 8,
+   "source": "点击回应-开心跃动.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c081",
+   "title": "Tickled giggling",
+   "title_zh": "点击回应-挠痒咯咯笑",
+   "category": "Click reactions",
+   "frames": 16,
+   "fps": 8,
+   "source": "点击回应-挠痒咯咯笑.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c082",
+   "title": "Looking in the mirror",
+   "title_zh": "照镜子",
+   "category": "Play and hobbies",
+   "frames": 16,
+   "fps": 8,
+   "source": "照镜子.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c083",
+   "title": "Playing with a water gun",
+   "title_zh": "玩水枪",
+   "category": "Play and hobbies",
+   "frames": 16,
+   "fps": 8,
+   "source": "玩水枪.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c084",
+   "title": "Raging while gaming",
+   "title_zh": "玩游戏气急败坏",
+   "category": "Play and hobbies",
+   "frames": 16,
+   "fps": 8,
+   "source": "玩游戏气急败坏.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c085",
+   "title": "Slapping the ground with the whale tail",
+   "title_zh": "用鲸鱼尾巴拍打地面",
+   "category": "Magic and animals",
+   "frames": 16,
+   "fps": 8,
+   "source": "用鲸鱼尾巴拍打地面.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c086",
+   "title": "Daydreaming, muttering",
+   "title_zh": "碎碎念-发呆碎碎念",
+   "category": "Muttering",
+   "frames": 16,
+   "fps": 8,
+   "source": "碎碎念-发呆碎碎念.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c087",
+   "title": "Muttering at the screen",
+   "title_zh": "碎碎念-对屏碎碎念",
+   "category": "Muttering",
+   "frames": 16,
+   "fps": 8,
+   "source": "碎碎念-对屏碎碎念.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c088",
+   "title": "Wiping the desk, muttering",
+   "title_zh": "碎碎念-擦桌碎碎念",
+   "category": "Muttering",
+   "frames": 16,
+   "fps": 8,
+   "source": "碎碎念-擦桌碎碎念.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c089",
+   "title": "Threading a needle (Qixi)",
+   "title_zh": "穿针乞巧",
+   "category": "Festivals",
+   "frames": 16,
+   "fps": 8,
+   "source": "穿针乞巧.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c090",
+   "title": "Lion dance head",
+   "title_zh": "舞狮头",
+   "category": "Festivals",
+   "frames": 16,
+   "fps": 8,
+   "source": "舞狮头.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c091",
+   "title": "Swinging",
+   "title_zh": "荡秋千",
+   "category": "Play and hobbies",
+   "frames": 16,
+   "fps": 8,
+   "source": "荡秋千.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c092",
+   "title": "Cute little ghost",
+   "title_zh": "萌化小幽灵",
+   "category": "Magic and animals",
+   "frames": 16,
+   "fps": 8,
+   "source": "萌化小幽灵.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c093",
+   "title": "A blue whale appears",
+   "title_zh": "蓝鲸现世",
+   "category": "Magic and animals",
+   "frames": 16,
+   "fps": 8,
+   "source": "蓝鲸现世.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c094",
+   "title": "Butterflies and bees, blooming head",
+   "title_zh": "蝴蝶蜜蜂环绕头顶开花",
+   "category": "Magic and animals",
+   "frames": 16,
+   "fps": 8,
+   "source": "蝴蝶蜜蜂环绕头顶开花.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c095",
+   "title": "Crab walk",
+   "title_zh": "螃蟹走路",
+   "category": "Moods and movement",
+   "frames": 16,
+   "fps": 8,
+   "source": "螃蟹走路.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c096",
+   "title": "Startled",
+   "title_zh": "被吓一跳",
+   "category": "Moods and movement",
+   "frames": 16,
+   "fps": 8,
+   "source": "被吓一跳.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c097",
+   "title": "Buried in fallen leaves",
+   "title_zh": "被落叶淹没",
+   "category": "Festivals",
+   "frames": 16,
+   "fps": 8,
+   "source": "被落叶淹没.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c098",
+   "title": "Dangling when dragged",
+   "title_zh": "被鼠标拖拽悬空反馈",
+   "category": "Moods and movement",
+   "frames": 16,
+   "fps": 8,
+   "source": "被鼠标拖拽悬空反馈.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c099",
+   "title": "Decorating the Christmas tree",
+   "title_zh": "装点圣诞树",
+   "category": "Festivals",
+   "frames": 16,
+   "fps": 8,
+   "source": "装点圣诞树.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c100",
+   "title": "Trick-or-treat pumpkin lantern",
+   "title_zh": "讨糖南瓜灯",
+   "category": "Festivals",
+   "frames": 16,
+   "fps": 8,
+   "source": "讨糖南瓜灯.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c101",
+   "title": "Huge stretch",
+   "title_zh": "超大伸懒腰",
+   "category": "Moods and movement",
+   "frames": 16,
+   "fps": 8,
+   "source": "超大伸懒腰.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c102",
+   "title": "Kicking a shuttlecock",
+   "title_zh": "踢毽子",
+   "category": "Play and hobbies",
+   "frames": 16,
+   "fps": 8,
+   "source": "踢毽子.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c103",
+   "title": "Light swaying dance",
+   "title_zh": "轻快摇摆舞",
+   "category": "Play and hobbies",
+   "frames": 16,
+   "fps": 8,
+   "source": "轻快摇摆舞.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c104",
+   "title": "Briskly taking notes",
+   "title_zh": "轻快记录",
+   "category": "Work",
+   "frames": 16,
+   "fps": 8,
+   "source": "轻快记录.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c105",
+   "title": "Riding a rocking horse",
+   "title_zh": "骑木马",
+   "category": "Play and hobbies",
+   "frames": 16,
+   "fps": 8,
+   "source": "骑木马.webm",
+   "duration_sec": 10.03
+  },
+  {
+   "id": "c106",
+   "title": "Whale blowing bubbles",
+   "title_zh": "鲸鱼吐泡泡特效",
+   "category": "Magic and animals",
+   "frames": 16,
+   "fps": 8,
+   "source": "鲸鱼吐泡泡特效.webm",
+   "duration_sec": 10.03
+  }
+ ]
+}

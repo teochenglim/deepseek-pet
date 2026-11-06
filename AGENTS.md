@@ -5,7 +5,7 @@ macOS desktop pet. Tauri v2 (Rust + system WebView, plain HTML/JS, no bundler) f
 ## Where things stand
 
 - Built: v0.1.0 code done and `make check` green; .app and .dmg build. Awaiting the human visual pass (see Limits in RELEASE/v0.1.0.md). 0.2.0-1.0.0 planned. Status table: [RELEASE.md](RELEASE.md).
-- Next: v0.5.0 (Dock, menu bar, floating; see RELEASE/v0.5.0.md), then 1.0.0. v0.4.1 is released.
+- Next: v0.6.0 (Play animation menu; see RELEASE/v0.6.0.md) and v0.5.0 (Dock, menu bar, floating) both await a manual pass, then 1.0.0.
 - Reference clones `coding-agent-pet/` and `big-blue-fish-desktop-pet/` are git-ignored read-only references. Never edit them; copy what is needed into `desktop/cross-platform/`, `assets/`.
 
 Code map:
@@ -20,6 +20,8 @@ Code map:
 | `desktop/docs/` | upstream docs (Chinese), reference only |
 | `tools/convert-assets.py` | WebM -> frames; `state-map.json` picks the clip per state; `make convert-assets` |
 | `docs/hooks/` | example hook configs |
+| `assets/big-blue-fish/frames/extras/` | all 106 clips (16 palette PNG frames each) + `catalog.json`; loaded on demand by `playExtra`, never at startup. Rebuild with `make convert-extras`; titles in `tools/clip-titles.json` |
+| `desktop/cross-platform/src-tauri/src/catalog.rs` | reads the catalog, groups it for the tray "Play animation" submenu |
 | `tools/install_hooks.py`, `scripts/install-hooks.sh`, `scripts/uninstall-hooks.sh` | idempotent Claude Code + ZCode hook installer (marker `# deepseek-pet`) |
 | `packaging/homebrew/` | cask template; `scripts/update-cask.sh` renders it; release job pushes to the tap |
 
@@ -60,3 +62,4 @@ Read the release file first. Probe the real thing (run hook, read socket) before
 - `src-tauri/deny.toml` ignores and `src-tauri/.cargo/audit.toml` must stay in sync; each ignored advisory is a transitive tauri dependency, recheck on every tauri bump.
 - `cargo-deny` needs `license` in `Cargo.toml`; macOS-only `targets` in `deny.toml` hide the gtk/webkit2gtk trees.
 - The app is `ActivationPolicy::Regular` on purpose (Dock icon, requested after 0.4.0); do not restore Accessory. The menu-bar icon must be `icons/tray.png` with `icon_as_template(false)`: the default window icon rendered blank there.
+- Extras must never enter `frames-manifest.json` (the renderer loads every row at startup, 106 clips would be about 270 MB decoded). `tools/requirements.txt` is scanned by Trivy: keep Pillow on a CVE-free version.

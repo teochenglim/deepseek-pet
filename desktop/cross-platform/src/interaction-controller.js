@@ -751,7 +751,19 @@ export function setupInteractions({ animator, menu, bubble, petSprite, jsLog }) 
     e.preventDefault();
     // 菜单可见期间禁用命中检测
     beginExclusivePointerInteraction();
-    showContextMenuAtPetBottomLeft();
+    // Native menu: Random, categories, Hide, Quit on the first screen (no extra click).
+    // If it cannot open, fall back to the small in-window menu.
+    invoke("show_pet_menu")
+      .catch((err) => {
+        console.error("[Menu] show_pet_menu failed:", err);
+        showContextMenuAtPetBottomLeft();
+      })
+      .finally(() => {
+        if (!menu.isVisible()) {
+          hitTestEnabled = true;
+          armNormalHitTestPolling();
+        }
+      });
   });
 
   // 点击其他任意位置以关闭菜单

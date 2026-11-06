@@ -65,9 +65,14 @@ fn ac_0_4_4_menu_has_quit_and_hide() {
 fn ac_0_4_4_hide_restorable_via_tray() {
     let lib = fs::read_to_string(app().join("src-tauri/src/lib.rs")).unwrap();
     assert!(lib.contains("TrayIconBuilder"), "no menu-bar icon");
+    let menus = fs::read_to_string(app().join("src-tauri/src/menus.rs")).unwrap();
     assert!(
-        lib.contains("\"show\" => commands::show_pet"),
+        menus.contains("Action::Show => crate::commands::show_pet"),
         "tray cannot restore the pet"
+    );
+    assert!(
+        lib.contains("menus::parse_action"),
+        "tray not wired to the shared actions"
     );
     assert!(
         lib.contains("commands::hide_pet"),

@@ -4,6 +4,7 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
+use tauri::menu::ContextMenu;
 use tauri::Manager;
 use tracing::info;
 
@@ -96,6 +97,18 @@ pub fn hide_pet(app: tauri::AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
         let _ = window.hide();
     }
+}
+
+/// Pop up the pet's native right-click menu at the cursor: Random + categories + Hide + Quit.
+/// The window is too small to hold 106 clips, so this is a native macOS menu.
+#[tauri::command]
+pub fn show_pet_menu(
+    app: tauri::AppHandle,
+    window: tauri::Window,
+    catalog: tauri::State<'_, crate::menus::PlayCatalog>,
+) -> Result<(), String> {
+    let menu = crate::menus::pet_popup(&app, &catalog.0).map_err(|e| e.to_string())?;
+    menu.popup(window).map_err(|e| e.to_string())
 }
 
 /// Show the pet window again (menu-bar icon).

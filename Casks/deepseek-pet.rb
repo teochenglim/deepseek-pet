@@ -1,6 +1,6 @@
 cask "deepseek-pet" do
-  version "0.8.4"
-  sha256 "332a501fe586548fd9c0afca97e3aa17cd62c321bb54989aa111f4b55a3485a6"
+  version "0.8.5"
+  sha256 "92ae435e72fcd27c20e1a1e7d4ca9e4aca5341782ec1cc78fdc1e5f256d1f462"
 
   url "https://github.com/teochenglim/deepseek-pet/releases/download/v#{version}/DeepseekPet_#{version}_aarch64.dmg"
   name "deepseek-pet"

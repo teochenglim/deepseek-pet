@@ -18,6 +18,7 @@ macOS desktop pet: Tauri v2 shell forked from coding-agent-pet, Big Blue Fish an
 | Release | Theme | Status | Requirements |
 |---|---|---|---|
 | [v1.0.0](RELEASE/v1.0.0.md) | Stable release | planned | R-P1, R-D1, R-M1 |
+| [v0.8.6](RELEASE/v0.8.6.md) | Homebrew cask deprecation fixes | active | R-D1 |
 | [v0.8.5](RELEASE/v0.8.5.md) | Homebrew install fix | active | R-D1 |
 | [v0.8.4](RELEASE/v0.8.4.md) | README with animated gallery | active | R-K1 |
 | [v0.8.2](RELEASE/v0.8.2.md) | Varied default animations | active | R-K1 |

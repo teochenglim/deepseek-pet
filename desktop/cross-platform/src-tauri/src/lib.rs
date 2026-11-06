@@ -6,6 +6,7 @@ mod aggregator;
 mod catalog;
 mod commands;
 mod config;
+mod home;
 mod menus;
 mod watcher;
 

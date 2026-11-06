@@ -102,13 +102,35 @@ impl PetConfig {
             .and_then(|p| p.parent().map(|p| p.to_path_buf()))
             .unwrap_or_else(|| PathBuf::from("."));
 
-        let config_path = find_config_path(&exe_dir);
-        let config_dir = config_path
-            .as_ref()
-            .and_then(|path| path.parent().map(Path::to_path_buf))
-            .unwrap_or_else(|| PathBuf::from("."));
-        let detected_base = detect_repo_root(&config_dir);
-        let actual_path = config_path.unwrap_or_else(|| config_dir.join("config.json"));
+        // Installed app: read-only files come from Contents/Resources, user state from ~/.deepseek-pet.
+        // Development run from the repository: unchanged repo-relative lookup.
+        let user_home = crate::home::user_home_dir();
+        let bundle = std::env::current_exe()
+            .ok()
+            .and_then(|exe| crate::home::bundle_resources(&exe));
+        let (actual_path, detected_base) = match &bundle {
+            Some(resources) => {
+                if let Err(e) = crate::home::ensure_user_home(&user_home, resources) {
+                    warn!("Cannot prepare {}: {}", user_home.display(), e);
+                }
+                (
+                    user_home.join("config.json"),
+                    resources.to_string_lossy().to_string(),
+                )
+            }
+            None => {
+                let config_path = find_config_path(&exe_dir);
+                let config_dir = config_path
+                    .as_ref()
+                    .and_then(|path| path.parent().map(Path::to_path_buf))
+                    .unwrap_or_else(|| PathBuf::from("."));
+                let detected_base = detect_repo_root(&config_dir);
+                (
+                    config_path.unwrap_or_else(|| config_dir.join("config.json")),
+                    detected_base,
+                )
+            }
+        };
 
         let raw: RawConfig = std::fs::read_to_string(&actual_path)
             .ok()
@@ -169,10 +191,18 @@ impl PetConfig {
         let frames_dir = frames_dir_override
             .unwrap_or_else(|| join_path_string(&pet_base_dir, &["assets", &pet_id, "frames"]));
         let sessions_dir = sessions_dir_override.unwrap_or_else(|| {
-            join_path_string(
-                &pet_base_dir,
-                &["desktop", "cross-platform", "runtime", "sessions"],
-            )
+            if bundle.is_some() {
+                user_home
+                    .join("runtime")
+                    .join("sessions")
+                    .to_string_lossy()
+                    .to_string()
+            } else {
+                join_path_string(
+                    &pet_base_dir,
+                    &["desktop", "cross-platform", "runtime", "sessions"],
+                )
+            }
         });
 
         let config = Self {

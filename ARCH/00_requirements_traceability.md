@@ -15,6 +15,8 @@ Every requirement is cited by at least one AC in `RELEASE/vX.Y.Z.md` (`make ac-m
 | R-I1 | Drag, click, hover, right-click menu respond | PRD 0.4.0 | 0.4.0 |
 | R-P1 | Footprint: bundle <= 60 MB, idle memory <= 80 MB, cold start <= 3 s | PRD G6 | 1.0.0 |
 | R-D1 | Tag push builds and publishes macOS .dmg; Homebrew Cask | PRD G5 | 1.0.0 |
+| R-K1 | The user can map hook events to animations (a state or a clip) per agent from the menu-bar icon | request after 0.6.0 | 0.7.0, 0.8.0 |
+| R-K2 | The user can install and remove the pet's hooks for the supported coding agents from the menu-bar icon | request after 0.6.0 | 0.8.0 |
 | R-M1 | Mapped / unmapped animations recorded; 15+ states covered | PRD 1.0.0 | 1.0.0 |
 
 ## PRD corrections found while scaffolding

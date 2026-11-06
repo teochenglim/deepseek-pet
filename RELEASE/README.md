@@ -7,6 +7,9 @@ Roll-up: [`../RELEASE.md`](../RELEASE.md).
 | [v0.1.0](v0.1.0.md) | Skeleton + static fish | transparent on-top fish still; Stop hook event logged | - |
 | [v0.2.0](v0.2.0.md) | Asset pipeline | `tools/convert-assets.py` yields idle/running-right/failed frames | 0.1.0 |
 | [v0.3.0](v0.3.0.md) | Claude Code + Z.ai | both agents' hooks switch state | 0.2.0 |
+| [v0.8.0](v0.8.0.md) | Install hooks for more agents | menu-bar install and mapping for nine more agents | 0.7.0 |
+| [v0.7.0](v0.7.0.md) | Map animations to hooks | per-event state or clip chosen from the menu-bar icon | 0.6.1 |
+| [v0.6.1](v0.6.1.md) | Standalone app | installed .app works without the repo | 0.6.0 |
 | [v0.6.0](v0.6.0.md) | Play any animation | 106 clips playable from the menu-bar icon | 0.5.0 |
 | [v0.5.0](v0.5.0.md) | Dock, menu bar, floating | app in Dock and menu bar, floats on every Space | 0.4.1 |
 | [v0.4.1](v0.4.1.md) | CI fixes | `make check`/`make audit` green, release publishes a dmg | 0.4.0 |

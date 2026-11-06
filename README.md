@@ -26,3 +26,12 @@ brew install --cask teochenglim/deepseek-pet/deepseek-pet
 ```
 
 Or download `DeepseekPet_<version>_aarch64.dmg` from the GitHub Releases page and drag the app to Applications. Builds are not notarized yet: first launch needs right-click, Open (the cask clears the quarantine flag for you).
+
+## Hooks
+
+```bash
+./scripts/install-hooks.sh      # Claude Code (~/.claude/settings.json) and Z.ai ZCode (~/.zcode/cli/config.json)
+./scripts/uninstall-hooks.sh    # removes only our entries
+```
+
+Safe to run repeatedly. `--only claude` or `--only zai` limits it to one agent. Restart the agent session after installing.

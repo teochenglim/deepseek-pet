@@ -718,6 +718,53 @@ mod tests {
     }
 
     #[test]
+    fn ac_0_3_3_two_sessions_running_wins() {
+        let dir = temp_dir("ac033a");
+        fs::create_dir_all(&dir).unwrap();
+        let agg = ActivityAggregator::new(dir.to_string_lossy().to_string(), 3600);
+        agg.update(
+            "claude-1",
+            "running",
+            "",
+            "PreToolUse",
+            "claude-code",
+            false,
+        );
+        agg.update("zai-1", "idle", "", "SubagentStop", "zai", false);
+        {
+            let inner = agg.inner.lock().unwrap();
+            assert_eq!(inner.aggregated.current_state, "running");
+            assert_eq!(inner.aggregated.active_count, 2);
+        }
+        // waiting outranks running
+        agg.update("zai-1", "waiting", "", "PermissionRequest", "zai", false);
+        assert_eq!(
+            agg.inner.lock().unwrap().aggregated.current_state,
+            "waiting"
+        );
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn ac_0_3_3_session_end_falls_back() {
+        let dir = temp_dir("ac033b");
+        fs::create_dir_all(&dir).unwrap();
+        let agg = ActivityAggregator::new(dir.to_string_lossy().to_string(), 3600);
+        agg.update("a", "running", "", "PreToolUse", "claude-code", false);
+        agg.update("b", "failed", "", "StopFailure", "zai", false);
+        assert_eq!(
+            agg.inner.lock().unwrap().aggregated.current_state,
+            "running"
+        );
+        agg.update("a", "idle", "", "SessionEnd", "claude-code", true);
+        // only the failed session is left, so the fish shows failed
+        assert_eq!(agg.inner.lock().unwrap().aggregated.current_state, "failed");
+        agg.update("b", "idle", "", "SessionEnd", "zai", true);
+        assert_eq!(agg.inner.lock().unwrap().aggregated.current_state, "idle");
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
     fn reconcile_paths_overwrites_existing_activity_from_disk() {
         let dir = temp_dir("reconcile");
         fs::create_dir_all(&dir).unwrap();

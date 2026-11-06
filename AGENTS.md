@@ -5,7 +5,7 @@ macOS desktop pet. Tauri v2 (Rust + system WebView, plain HTML/JS, no bundler) f
 ## Where things stand
 
 - Built: v0.1.0 code done and `make check` green; .app and .dmg build. Awaiting the human visual pass (see Limits in RELEASE/v0.1.0.md). 0.2.0-1.0.0 planned. Status table: [RELEASE.md](RELEASE.md).
-- Next: v0.2.0 (converter built, see RELEASE/v0.2.0.md), then 0.3.0.
+- Next: finish v0.3.0 (hooks + app icon built, see RELEASE/v0.3.0.md), then 0.4.0.
 - Reference clones `coding-agent-pet/` and `big-blue-fish-desktop-pet/` are git-ignored read-only references. Never edit them; copy what is needed into `desktop/cross-platform/`, `assets/`.
 
 Code map:
@@ -20,6 +20,7 @@ Code map:
 | `desktop/docs/` | upstream docs (Chinese), reference only |
 | `tools/convert-assets.py` | WebM -> frames; `state-map.json` picks the clip per state; `make convert-assets` |
 | `docs/hooks/` | example hook configs |
+| `tools/install_hooks.py`, `scripts/install-hooks.sh`, `scripts/uninstall-hooks.sh` | idempotent Claude Code + ZCode hook installer (marker `# deepseek-pet`) |
 | `packaging/homebrew/` | cask template; `scripts/update-cask.sh` renders it; release job pushes to the tap |
 
 ## Commands
@@ -53,3 +54,5 @@ Read the release file first. Probe the real thing (run hook, read socket) before
 - Actions are SHA-pinned (checkout, codeql upload-sarif and Trivy digest copied from ~/code/glove). `scripts/pin-actions.py` mislabeled checkout as v4.4.0, so verify `# vX.Y.Z` comments after any bump.
 - Security: `.github/workflows/security.yml` runs Semgrep (p/rust, p/javascript, p/github-actions, p/secrets, p/owasp-top-ten + `.semgrep/rules.yaml`) and Trivy fs. Only ERROR fails the gate; unwrap/innerHTML rules are WARNING because upstream code has 40 unwrap hits. Run locally with `semgrep scan --config .semgrep/rules.yaml --exclude coding-agent-pet --exclude big-blue-fish-desktop-pet .`.
 - Do not put destructive shell strings (even inside heredocs) in Bash commands; the harness blocks them. Write such files with the editor tool.
+- ZCode (Z.ai) is a separate agent with Claude-compatible hook payloads; its config is `~/.zcode/cli/config.json` and project-level hooks are ignored by ZCode. Failure event is `PostToolUseFailure`. Never run the installer against the real `~/.claude` or `~/.zcode` in tests; use `--claude-settings/--zcode-config` temp paths.
+- `terminal_events` deletes the session, so never list an event there whose state should stay visible (StopFailure was, and hid `failed`).

@@ -12,3 +12,4 @@ dist/
 /assets/webm/
 desktop/cross-platform/runtime/
 desktop/cross-platform/config.json
+__pycache__/

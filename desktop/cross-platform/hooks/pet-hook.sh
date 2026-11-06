@@ -18,6 +18,9 @@ case "$SOURCE" in
     codex)
         run_hook "codex_hook.py"
         ;;
+    zai)
+        run_hook "zai_hook.py"
+        ;;
     *)
         echo "Unsupported hook source: $SOURCE" >&2
         exit 1

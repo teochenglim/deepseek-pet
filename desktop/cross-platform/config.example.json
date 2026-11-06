@@ -11,8 +11,12 @@
     "fps": 10,
     "_frame_timing_comment": "Per-frame hold in ticks (fps ticks). Big Blue Fish idle is 8 frames, 3 ticks each = 2.4s breathing loop at 10fps.",
     "frame_timing": {
-      "default": { "holds": [1] },
-      "idle": { "holds": [3, 3, 3, 3, 3, 3, 3, 3] }
+      "default": {
+        "holds": [1]
+      },
+      "idle": {
+        "holds": [3, 3, 3, 3, 3, 3, 3, 3]
+      }
     },
     "_stale_timeout_sec_comment": "会话文件保持不变多久（秒）后被视为已死。1h 覆盖读取/思考/长时间工具调用；崩溃的进程在此 TTL 后被清理。",
     "stale_timeout_sec": 3600,
@@ -36,21 +40,63 @@
     "codex_hooks": null,
     "opencode_plugins_dir": null
   },
-  "terminal_events": ["StopFailure", "SessionEnd"],
+  "terminal_events": ["SessionEnd"],
   "state_map": {
-    "SessionStart": { "state": "waving", "dialogue": "嗨！小鸟来啦～" },
-    "UserPromptSubmit": { "state": "running", "dialogue": "收到！开始工作～" },
-    "PreToolUse": { "state": "running", "dialogue": "执行中..." },
-    "Stop": { "state": "jumping", "dialogue": "搞定啦！✨" },
-    "StopFailure": { "state": "failed", "dialogue": "呜...出了点问题" },
-    "Notification": { "state": "waving", "dialogue": "注意哦～" },
-    "PermissionRequest": { "state": "waiting", "dialogue": "需要你的授权～" },
-    "SubagentStop": { "state": "idle", "dialogue": "" },
-    "PreCompact": { "state": "waiting", "dialogue": "整理一下记忆..." },
-    "SessionEnd": { "state": "waving", "dialogue": "下次见！♪" },
-    "QuestionAsked": { "state": "waiting", "dialogue": "需要你的选择～" }
+    "SessionStart": {
+      "state": "waving",
+      "dialogue": "Hi!"
+    },
+    "UserPromptSubmit": {
+      "state": "running",
+      "dialogue": "On it!"
+    },
+    "PreToolUse": {
+      "state": "running",
+      "dialogue": "Working..."
+    },
+    "Stop": {
+      "state": "jumping",
+      "dialogue": "Done!"
+    },
+    "StopFailure": {
+      "state": "failed",
+      "dialogue": "Something went wrong"
+    },
+    "Notification": {
+      "state": "waving",
+      "dialogue": "Heads up"
+    },
+    "PermissionRequest": {
+      "state": "waiting",
+      "dialogue": "Needs your approval"
+    },
+    "SubagentStop": {
+      "state": "idle",
+      "dialogue": ""
+    },
+    "PreCompact": {
+      "state": "waiting",
+      "dialogue": "Tidying memory..."
+    },
+    "SessionEnd": {
+      "state": "waving",
+      "dialogue": "See you!"
+    },
+    "QuestionAsked": {
+      "state": "waiting",
+      "dialogue": "Needs your choice"
+    },
+    "PostToolUseFailure": {
+      "state": "failed",
+      "dialogue": "Something went wrong"
+    }
   },
   "menu": {
-    "items": [{ "title": "关闭宠物", "action": "quit" }]
+    "items": [
+      {
+        "title": "关闭宠物",
+        "action": "quit"
+      }
+    ]
   }
 }

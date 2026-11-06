@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 DEFAULT_STATE = {'state': 'idle', 'dialogue': ''}
-POST_TOOL_STATE = {'state': 'running', 'dialogue': '处理中...'}
+POST_TOOL_STATE = {'state': 'running', 'dialogue': 'Working...'}
 
 
 def exit_quietly(output=None):

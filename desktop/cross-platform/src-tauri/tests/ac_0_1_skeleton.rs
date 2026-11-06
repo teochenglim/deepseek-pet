@@ -34,6 +34,20 @@ fn ac_0_1_1_bundle_targets_include_app() {
     assert!(ok, "bundle.targets must include app/dmg, got {t}");
 }
 #[test]
+fn ac_0_1_1_bundle_icons_present() {
+    // the installed app and dmg must carry the Big Blue Fish icon, not Tauri's default
+    let icons = conf()["bundle"]["icon"].clone();
+    let list = icons.as_array().expect("bundle.icon must list icons");
+    assert!(list
+        .iter()
+        .any(|v| v.as_str().is_some_and(|s| s.ends_with("icon.icns"))));
+    for v in list {
+        let p = Path::new(env!("CARGO_MANIFEST_DIR")).join(v.as_str().unwrap());
+        assert!(p.is_file(), "missing icon {p:?}");
+    }
+    assert!(root().join("assets/branding/icon-1024.png").is_file());
+}
+#[test]
 fn ac_0_1_2_window_transparent() {
     assert_eq!(window()["transparent"], true);
 }

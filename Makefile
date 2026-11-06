@@ -31,7 +31,7 @@ run: ## Run the pet in dev mode
 test: ## Rust tests (AC config tests + unit tests) and hook tests
 	cargo test --locked --manifest-path $(MANIFEST)
 	cd $(APP) && npm test --silent
-	python3 -m unittest tools/test_convert_assets.py
+	python3 -m unittest tools/test_convert_assets.py tools/test_install_hooks.py
 
 .PHONY: ac-map
 ac-map: ## Traceability gate: every requirement -> AC -> >=2 tests

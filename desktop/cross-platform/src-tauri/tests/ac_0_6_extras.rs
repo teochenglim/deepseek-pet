@@ -108,7 +108,8 @@ fn ac_0_6_4_tray_has_play_menu() {
     let base = root().join("desktop/cross-platform");
     let lib = fs::read_to_string(base.join("src-tauri/src/lib.rs")).unwrap();
     let menus = fs::read_to_string(base.join("src-tauri/src/menus.rs")).unwrap();
-    assert!(lib.contains("\"Play animation\"") && lib.contains("menus::play_entries"));
+    assert!(lib.contains("menus::build_tray_menu"));
+    assert!(menus.contains("\"Play animation\"") && menus.contains("play_entries(app"));
     assert!(menus.contains("play:random") && menus.contains("\"play-animation\""));
     let main = fs::read_to_string(base.join("src/main.js")).unwrap();
     assert!(main.contains("\"play-animation\"") && main.contains("playExtra"));

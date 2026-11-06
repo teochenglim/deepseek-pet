@@ -128,6 +128,12 @@ where
 
     session_mgr.update(&session_id, &state, &dialogue, &event, &source, is_terminal);
 
+    // A mapped clip arrives only on the live socket, so it plays once (the session-file
+    // watcher sees the same event again and must not replay it).
+    if let Some(clip) = json["clip"].as_str().filter(|c| !c.is_empty()) {
+        session_mgr.play_clip(clip);
+    }
+
     if event == "Stop" || state == "jumping" || state == "waving" {
         let mgr2 = session_mgr.clone();
         let sid = session_id.clone();

@@ -5,7 +5,7 @@ macOS desktop pet. Tauri v2 (Rust + system WebView, plain HTML/JS, no bundler) f
 ## Where things stand
 
 - Built: v0.1.0 code done and `make check` green; .app and .dmg build. Awaiting the human visual pass (see Limits in RELEASE/v0.1.0.md). 0.2.0-1.0.0 planned. Status table: [RELEASE.md](RELEASE.md).
-- Next: v0.6.0 (Play animation menu) and v0.5.0 (Dock, menu bar, floating) await a manual pass. Planned: v0.6.1 standalone app (bundle frames/config/hooks, done in code, needs a manual install pass), v0.7.0 map hook events to animations from the menu-bar icon, v0.8.0 install hooks for Codex, Gemini, Qwen, Kimi, Copilot, Cursor, OpenCode, DeepSeek Harness. Then 1.0.0.
+- Next: v0.6.0 (Play animation menu) and v0.5.0 (Dock, menu bar, floating) await a manual pass. Planned: v0.6.1 standalone app (bundle frames/config/hooks, done in code, needs a manual install pass), v0.7.0 map hook events to animations (built, needs a manual pass), v0.8.0 install hooks for Codex, Gemini, Qwen, Kimi, Copilot, Cursor, OpenCode, DeepSeek Harness. Then 1.0.0.
 - Reference clones `coding-agent-pet/` and `big-blue-fish-desktop-pet/` are git-ignored read-only references. Never edit them; copy what is needed into `desktop/cross-platform/`, `assets/`.
 
 Code map:
@@ -22,6 +22,8 @@ Code map:
 | `docs/hooks/` | example hook configs |
 | `assets/big-blue-fish/frames/extras/` | all 106 clips (16 palette PNG frames each) + `catalog.json`; loaded on demand by `playExtra`, never at startup. Rebuild with `make convert-extras`; titles in `tools/clip-titles.json` |
 | `desktop/cross-platform/src-tauri/src/home.rs` | installed-app layout: read-only files in `Contents/Resources`, user state and hook scripts in `~/.deepseek-pet` (`DEEPSEEK_PET_HOME` overrides) |
+| `desktop/cross-platform/src-tauri/src/mapping.rs` | `~/.deepseek-pet/mapping.json` model (agent -> event -> state / clip / off), agent and event tables, shared by the tray menu; hook scripts read the same file (`common.py` `apply_mapping`) |
+| `desktop/cross-platform/src-tauri/src/menus.rs` | tray menu (Play animation, Map animations), right-click popup, and one `parse_action`/`run` for both |
 | `desktop/cross-platform/src-tauri/src/catalog.rs` | reads the catalog, groups it for the tray "Play animation" submenu |
 | `tools/install_hooks.py`, `scripts/install-hooks.sh`, `scripts/uninstall-hooks.sh` | idempotent Claude Code + ZCode hook installer (marker `# deepseek-pet`) |
 | `packaging/homebrew/` | cask template; `scripts/update-cask.sh` renders it; release job pushes to the tap |
@@ -65,3 +67,4 @@ Read the release file first. Probe the real thing (run hook, read socket) before
 - The app is `ActivationPolicy::Regular` on purpose (Dock icon, requested after 0.4.0); do not restore Accessory. The menu-bar icon must be `icons/tray.png` with `icon_as_template(false)`: the default window icon rendered blank there.
 - Extras must never enter `frames-manifest.json` (the renderer loads every row at startup, 106 clips would be about 270 MB decoded). `tools/requirements.txt` is scanned by Trivy: keep Pillow on a CVE-free version.
 - Installed `.app` vs repo run: `home::bundle_resources(exe)` decides. In a bundle, frames and defaults come from `Contents/Resources` and `config.json`, `hooks/`, `runtime/` from `~/.deepseek-pet`; a repo run keeps the old repo-relative paths. A new `bundle.resources` entry must be added to `tauri.conf.json` and covered by `ac_0_6_6_*`.
+- Mapping rules live in two places that must agree: `mapping.rs` (menu, file writer) and `common.py` `apply_mapping` (what a hook does with an entry). Adding an agent event means updating `AGENTS` in `mapping.rs` and `tools/install_hooks.py`; `ac_0_7_4_agent_event_tables_match_installer` fails if they drift. Clips only fire on the live socket, not from the sessions-folder watcher.

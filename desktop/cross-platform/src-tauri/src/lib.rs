@@ -7,6 +7,7 @@ mod catalog;
 mod commands;
 mod config;
 mod home;
+mod mapping;
 mod menus;
 mod watcher;
 
@@ -171,6 +172,9 @@ pub fn run() {
             app.manage(menus::PlayCatalog(Arc::new(catalog::load(
                 &config.frames_dir,
             ))));
+            app.manage(mapping::MappingStore::new(mapping::Mapping::load(
+                &home::user_home_dir().join("mapping.json"),
+            )));
             // 10. 存储配置 + 聚合器，供前端 / 命令访问
             let endpoint_for_guard = config.event_endpoint.clone();
             app.manage(session_mgr.clone());
@@ -181,33 +185,32 @@ pub fn run() {
                 endpoint: endpoint_for_guard,
             });
 
-            // 11. Menu-bar icon: restores a hidden pet, plays any clip on demand, quits
+            // 11. Menu-bar icon: restores a hidden pet, plays any clip, maps hook events to animations
             {
-                use tauri::menu::{IsMenuItem, Menu, MenuItem, Submenu};
                 use tauri::tray::TrayIconBuilder;
-                let clips = app.state::<menus::PlayCatalog>().0.clone();
-                let show =
-                    MenuItem::with_id(app, "show", "Show Big Blue Fish", true, None::<&str>)?;
-                let play = Submenu::with_id(app, "play", "Play animation", !clips.is_empty())?;
-                let (random, categories) = menus::play_entries(app.handle(), &clips, "")?;
-                play.append(&random)?;
-                let items: Vec<&dyn IsMenuItem<tauri::Wry>> = categories
-                    .iter()
-                    .map(|c| c as &dyn IsMenuItem<tauri::Wry>)
-                    .collect();
-                play.append_items(&items)?;
-                let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-                let menu = Menu::with_items(app, &[&show, &play, &quit])?;
-                let mut tray = TrayIconBuilder::new()
+                let menu = menus::build_tray_menu(app.handle())?;
+                let icon = tauri::image::Image::from_bytes(include_bytes!("../icons/tray.png"))?;
+                TrayIconBuilder::with_id("main")
                     .menu(&menu)
                     .on_menu_event(|app, event| {
                         if let Some(action) = menus::parse_action(event.id.as_ref(), "") {
                             menus::run(app, action);
                         }
-                    });
-                let icon = tauri::image::Image::from_bytes(include_bytes!("../icons/tray.png"))?;
-                tray = tray.icon(icon).icon_as_template(false);
-                tray.build(app)?;
+                    })
+                    .icon(icon)
+                    .icon_as_template(false)
+                    .build(app)?;
+            }
+
+            // 12. Clips requested by hook events (mapping.json): play once, never reveal a hidden pet
+            {
+                let handle = app.handle().clone();
+                let mut clips_rx = session_mgr.subscribe_clips();
+                tauri::async_runtime::spawn(async move {
+                    while let Ok(id) = clips_rx.recv().await {
+                        menus::play(&handle, &id, false);
+                    }
+                });
             }
 
             info!("DeepseekPet running. Press Ctrl+C to exit.");

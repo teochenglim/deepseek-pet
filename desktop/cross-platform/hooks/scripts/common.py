@@ -9,6 +9,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 DEFAULT_STATE = {'state': 'idle', 'dialogue': ''}
+
+# Animation choices made in the menu-bar icon (Map animations): ~/.deepseek-pet/mapping.json
+MAPPABLE_STATES = {'idle', 'running', 'waiting', 'review', 'failed', 'waving', 'jumping'}
+ONE_SHOT_STATES = {'jumping', 'waving'}
 POST_TOOL_STATE = {'state': 'running', 'dialogue': 'Working...'}
 
 
@@ -169,6 +173,50 @@ def resolve_state(hook_event, state_map):
     return dict(state_map.get(hook_event, DEFAULT_STATE))
 
 
+def user_home_dir():
+    custom = os.environ.get('DEEPSEEK_PET_HOME')
+    if custom:
+        return Path(custom)
+    return Path.home() / '.deepseek-pet'
+
+
+def load_mapping(path=None):
+    """Read mapping.json fresh on every event. Missing or invalid file means no mapping."""
+    path = Path(path) if path else user_home_dir() / 'mapping.json'
+    try:
+        agents = load_json_file(path).get('agents')
+    except Exception:
+        return {}
+    return agents if isinstance(agents, dict) else {}
+
+
+def apply_mapping(state_info, entry):
+    """Apply one mapping entry to the default state info. Returns (state_info, clip_id or None).
+
+    {'state': s}  show state s instead of the default (dialogue kept)
+    {'clip': id}  play the clip once; the pet's working state is the default one, except a default
+                  one-shot (jumping, waving) which the clip replaces, so the pet goes idle after it
+    {'off': true} no animation: the pet goes idle
+    anything else: default
+    """
+    info = dict(state_info)
+    if not isinstance(entry, dict):
+        return info, None
+    if entry.get('off') is True:
+        info.update(state='idle', dialogue='')
+        return info, None
+    state = entry.get('state')
+    if isinstance(state, str) and state in MAPPABLE_STATES:
+        info['state'] = state
+        return info, None
+    clip = entry.get('clip')
+    if isinstance(clip, str) and clip.strip():
+        if info.get('state') in ONE_SHOT_STATES:
+            info.update(state='idle', dialogue='')
+        return info, clip.strip()
+    return info, None
+
+
 def append_debug_log(log_path, **fields):
     if not log_path:
         return
@@ -213,6 +261,9 @@ def process_event(platform_dir, source, hook_event, session_id, tool_name,
     os.makedirs(sessions_dir, exist_ok=True)
 
     state_info = resolve_state(hook_event, state_map)
+    agent_map = load_mapping().get(source)
+    entry = agent_map.get(hook_event) if isinstance(agent_map, dict) else None
+    state_info, clip = apply_mapping(state_info, entry)
     pet_state = state_info.get('state', 'idle')
     dialogue = state_info.get('dialogue', '')
 
@@ -236,6 +287,9 @@ def process_event(platform_dir, source, hook_event, session_id, tool_name,
         'isTerminal': is_terminal,
         'context':    context,
     }
+
+    if clip:
+        payload['clip'] = clip
 
     append_debug_log(
         log_path,

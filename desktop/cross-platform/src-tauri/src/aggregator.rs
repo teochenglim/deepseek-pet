@@ -146,6 +146,8 @@ pub struct ActivityAggregator {
     sessions_dir: String,
     stale_timeout_sec: u64,
     tx: broadcast::Sender<StateChange>,
+    /// Clip ids requested by hook events (mapping.json `clip` choices); played once each.
+    clip_tx: broadcast::Sender<String>,
 }
 
 // ── 访问 `inner.activities` 的便捷辅助函数 ──
@@ -180,6 +182,7 @@ impl ActivityAggregator {
 impl ActivityAggregator {
     pub fn new(sessions_dir: String, stale_timeout_sec: u64) -> Self {
         let (tx, _) = broadcast::channel(16);
+        let (clip_tx, _) = broadcast::channel(16);
         Self {
             inner: Mutex::new(Inner {
                 activities: HashMap::new(),
@@ -196,7 +199,17 @@ impl ActivityAggregator {
             sessions_dir,
             stale_timeout_sec,
             tx,
+            clip_tx,
         }
+    }
+
+    /// Ask the renderer to play a clip once. Never changes the aggregated state.
+    pub fn play_clip(&self, clip_id: &str) {
+        let _ = self.clip_tx.send(clip_id.to_string());
+    }
+
+    pub fn subscribe_clips(&self) -> broadcast::Receiver<String> {
+        self.clip_tx.subscribe()
     }
 
     pub fn subscribe(&self) -> broadcast::Receiver<StateChange> {
@@ -715,6 +728,32 @@ mod tests {
         });
         fs::write(&path, serde_json::to_string(&payload).unwrap()).unwrap();
         path
+    }
+
+    #[test]
+    fn ac_0_7_3_clip_event_broadcasts_without_changing_state() {
+        let dir = temp_dir("ac073a");
+        fs::create_dir_all(&dir).unwrap();
+        let agg = ActivityAggregator::new(dir.to_string_lossy().to_string(), 3600);
+        let mut clips = agg.subscribe_clips();
+        agg.update("a", "running", "", "PreToolUse", "claude-code", false);
+        agg.play_clip("c042");
+        assert_eq!(clips.try_recv().unwrap(), "c042");
+        assert_eq!(
+            agg.inner.lock().unwrap().aggregated.current_state,
+            "running",
+            "a clip must not change the working state"
+        );
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn ac_0_7_3_clip_without_listener_is_harmless() {
+        let dir = temp_dir("ac073b");
+        fs::create_dir_all(&dir).unwrap();
+        let agg = ActivityAggregator::new(dir.to_string_lossy().to_string(), 3600);
+        agg.play_clip("c001"); // nobody subscribed yet: must not panic
+        let _ = fs::remove_dir_all(dir);
     }
 
     #[test]

@@ -318,3 +318,73 @@ class EndpointTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class MappingTests(unittest.TestCase):
+    """Animation choices from the menu-bar icon (mapping.json), applied by the hook scripts."""
+
+    def test_ac_0_7_2_hook_uses_mapping_state(self):
+        from common import apply_mapping
+        info, clip = apply_mapping({'state': 'running', 'dialogue': 'Working...'}, {'state': 'review'})
+        self.assertEqual(info, {'state': 'review', 'dialogue': 'Working...'})
+        self.assertIsNone(clip)
+        info, _ = apply_mapping({'state': 'running', 'dialogue': 'x'}, {'off': True})
+        self.assertEqual(info['state'], 'idle')
+
+    def test_ac_0_7_2_unmapped_event_uses_default(self):
+        from common import apply_mapping
+        default = {'state': 'jumping', 'dialogue': 'Done!'}
+        for entry in (None, {}, {'state': 'not-a-state'}, {'clip': ''}, 'junk', {'bogus': 1}):
+            info, clip = apply_mapping(default, entry)
+            self.assertEqual(info, default, entry)
+            self.assertIsNone(clip)
+
+    def test_ac_0_7_2_hook_reads_rust_written_mapping_file(self):
+        from common import load_mapping
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / 'mapping.json'
+            path.write_text('{"version": 1, "agents": {"zai": {"Stop": {"clip": "c042"}}}}')
+            self.assertEqual(load_mapping(path)['zai']['Stop'], {'clip': 'c042'})
+            path.write_text('{broken')
+            self.assertEqual(load_mapping(path), {})
+            self.assertEqual(load_mapping(Path(d) / 'missing.json'), {})
+
+    def test_ac_0_7_3_clip_mapping_emits_clip(self):
+        from common import apply_mapping
+        _, clip = apply_mapping({'state': 'idle', 'dialogue': ''}, {'clip': ' c042 '})
+        self.assertEqual(clip, 'c042')
+
+    def test_ac_0_7_3_clip_mapping_keeps_working_state(self):
+        from common import apply_mapping
+        info, clip = apply_mapping({'state': 'running', 'dialogue': 'Working...'}, {'clip': 'c042'})
+        self.assertEqual((info['state'], clip), ('running', 'c042'))
+        # a clip replaces the default celebration instead of adding to it
+        info, clip = apply_mapping({'state': 'jumping', 'dialogue': 'Done!'}, {'clip': 'c042'})
+        self.assertEqual((info['state'], info['dialogue'], clip), ('idle', '', 'c042'))
+
+    def test_ac_0_7_3_process_event_writes_clip_into_payload(self):
+        import common
+        with tempfile.TemporaryDirectory() as d:
+            home = Path(d) / 'home'
+            home.mkdir()
+            (home / 'mapping.json').write_text('{"agents": {"claude-code": {"Stop": {"clip": "c007"}}}}')
+            platform = Path(d) / 'platform'
+            platform.mkdir()
+            sessions = Path(d) / 'sessions'
+            (platform / 'config.json').write_text(json.dumps({
+                'sessions_dir': str(sessions),
+                'event_endpoint': str(Path(d) / 'nobody.sock'),
+                'state_map': {'Stop': {'state': 'jumping', 'dialogue': 'Done!'}},
+            }))
+            old = os.environ.get('DEEPSEEK_PET_HOME')
+            os.environ['DEEPSEEK_PET_HOME'] = str(home)
+            try:
+                common.process_event(str(platform), 'claude-code', 'Stop', 's1', '')
+            finally:
+                if old is None:
+                    os.environ.pop('DEEPSEEK_PET_HOME', None)
+                else:
+                    os.environ['DEEPSEEK_PET_HOME'] = old
+            saved = json.loads((sessions / 's1.json').read_text())
+            self.assertEqual(saved['clip'], 'c007')
+            self.assertEqual(saved['state'], 'idle')

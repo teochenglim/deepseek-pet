@@ -75,9 +75,10 @@ Her default animation is a slow turn-around (above). Everything below plays in t
 
 ## Install
 
-Homebrew (Apple Silicon):
+Homebrew (Apple Silicon). This repo is its own tap, so tap it by URL first:
 
 ```bash
+brew tap teochenglim/deepseek-pet https://github.com/teochenglim/deepseek-pet
 brew install --cask teochenglim/deepseek-pet/deepseek-pet
 ```
 

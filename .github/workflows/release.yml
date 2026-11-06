@@ -42,23 +42,20 @@ jobs:
   homebrew:
     needs: build
     runs-on: ubuntu-latest
-    # Needs repo secret TAP_TOKEN (PAT with contents:write on teochenglim/homebrew-deepseek-pet). Skipped if unset.
-    if: ${{ vars.HOMEBREW_TAP == 'true' }}
+    # This repo is its own tap (Casks/deepseek-pet.rb); no second repo or PAT needed.
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          persist-credentials: false
-      - name: Render cask from the released dmg
+          ref: main
+      - name: Render cask from the released dmg and push to main
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           VER="${GITHUB_REF_NAME#v}"
           gh release download "$GITHUB_REF_NAME" --pattern '*.dmg' --dir dl
-          scripts/update-cask.sh "$VER" dl/*.dmg > deepseek-pet.rb
-      - name: Push to tap
-        env:
-          TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
-        run: |
-          git clone "https://x-access-token:${TAP_TOKEN}@github.com/teochenglim/homebrew-deepseek-pet.git" tap
-          mkdir -p tap/Casks && cp deepseek-pet.rb tap/Casks/
-          cd tap && git add Casks && git -c user.name=release-bot -c user.email=noreply@github.com commit -m "deepseek-pet ${GITHUB_REF_NAME}" && git push
+          mkdir -p Casks
+          scripts/update-cask.sh "$VER" dl/*.dmg | sed '1,2d' > Casks/deepseek-pet.rb
+          git add Casks
+          git diff --cached --quiet && exit 0
+          git -c user.name=release-bot -c user.email=noreply@github.com commit -m "cask: deepseek-pet ${GITHUB_REF_NAME}"
+          git push origin main

@@ -1,5 +1,5 @@
-# Cask template. Copy to Casks/deepseek-pet.rb in the tap repo
-# github.com/teochenglim/homebrew-deepseek-pet (the release workflow fills version and sha256).
+# Homebrew cask. This repo is its own tap: brew tap teochenglim/deepseek-pet https://github.com/teochenglim/deepseek-pet
+# The release workflow re-renders this file from packaging/homebrew/deepseek-pet.rb after each tag.
 cask "deepseek-pet" do
   version "__VERSION__"
   sha256 "__SHA256__"

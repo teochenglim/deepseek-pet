@@ -1,0 +1,28 @@
+[package]
+name = "deepseek-pet"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon", "macos-private-api"] }
+# NOTE: tauri-plugin-shell was removed — it was registered but never granted
+# any `shell:*` capability permission, and no frontend code used it (AppleScript
+# goes through `std::process::Command` in commands::run_applescript directly).
+# Leaving an unpermissioned plugin registered causes silent runtime failures
+# per the Tauri v2 capability model.
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["net", "sync", "time", "rt", "macros", "process"] }
+notify = "7"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc = "0.2"
+
+[lib]
+name = "deepseek_pet_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }

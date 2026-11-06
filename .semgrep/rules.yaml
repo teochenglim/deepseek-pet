@@ -1,0 +1,68 @@
+# Vendored Semgrep rules. They run IN ADDITION to the registry packs in
+# security.yml (keep every --config line there; this file extends, never replaces).
+# NOTE: keep messages free of colon-space, YAML reads it as a mapping indicator.
+rules:
+  - id: rust-command-variable-program
+    message: >-
+      Command::new with a non-literal program runs a caller-controlled binary.
+      Hook payloads and session data are untrusted, so only string-literal
+      programs (osascript, open) are allowed. Pass data as arguments, never as the program.
+    severity: ERROR
+    languages: [rust]
+    paths:
+      exclude:
+        - '**/tests/**'
+    patterns:
+      - pattern: Command::new($CMD)
+      - metavariable-pattern:
+          metavariable: $CMD
+          patterns:
+            - pattern-not: '"..."'
+
+  - id: rust-unwrap-in-non-test
+    message: >-
+      unwrap() or expect() can panic the pet process, which is long-lived. Return a Result
+      or handle the error. Allowed in tests and in main.
+    severity: WARNING
+    languages: [rust]
+    paths:
+      exclude:
+        - '**/tests/**'
+        - '**/main.rs'
+    pattern-either:
+      - pattern: $X.unwrap()
+      - pattern: $X.expect(...)
+
+  - id: js-innerhtml-assignment
+    message: >-
+      innerHTML assignment can inject markup from hook text (bubble messages come from
+      agent output). Build DOM nodes and set textContent instead.
+    severity: WARNING
+    languages: [javascript]
+    patterns:
+      - pattern-either:
+          - pattern: $E.innerHTML = $V
+          - pattern: $E.outerHTML = $V
+      - pattern-not: $E.innerHTML = ""
+
+  - id: tauri-csp-unsafe-script
+    message: >-
+      The Tauri CSP must not allow unsafe-eval or unsafe-inline for scripts.
+    severity: ERROR
+    languages: [json]
+    paths:
+      include:
+        - '**/tauri.conf.json'
+    pattern-regex: '"csp"\s*:\s*"[^"]*script-src[^"]*unsafe-(eval|inline)'
+
+  - id: hardcoded-credential
+    message: >-
+      A variable named like a credential is assigned a literal. Load it from the
+      environment, nothing credential-shaped belongs in the repo.
+    severity: ERROR
+    languages: [rust, javascript]
+    patterns:
+      - pattern: $X = "..."
+      - metavariable-regex:
+          metavariable: $X
+          regex: (?i)^(.*)(password|passwd|secret|token|apikey|api_key)(.*)$

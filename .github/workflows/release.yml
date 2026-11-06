@@ -1,0 +1,63 @@
+name: release
+on:
+  push:
+    tags: ["v[0-9]*"]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: macos-latest   # Apple Silicon (arm64) default target
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Tag must equal VERSION
+        run: test "${GITHUB_REF_NAME}" = "v$(cat VERSION)"
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: desktop/cross-platform/package-lock.json
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: desktop/cross-platform/src-tauri
+      - run: make setup && make check
+      - run: make build
+      - name: Package
+        run: |
+          mkdir out
+          cp desktop/cross-platform/src-tauri/target/release/bundle/dmg/*.dmg out/
+          tar czf "out/deepseek-pet-${GITHUB_REF_NAME}-aarch64-apple-darwin.app.tar.gz" -C desktop/cross-platform/src-tauri/target/release/bundle/macos .
+          (cd out && shasum -a 256 * > SHA256SUMS)
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" out/* --title "$GITHUB_REF_NAME" \
+            --notes-file "RELEASE/$GITHUB_REF_NAME.md" || gh release create "$GITHUB_REF_NAME" out/* --generate-notes
+  homebrew:
+    needs: build
+    runs-on: ubuntu-latest
+    # Needs repo secret TAP_TOKEN (PAT with contents:write on teochenglim/homebrew-deepseek-pet). Skipped if unset.
+    if: ${{ vars.HOMEBREW_TAP == 'true' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Render cask from the released dmg
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VER="${GITHUB_REF_NAME#v}"
+          gh release download "$GITHUB_REF_NAME" --pattern '*.dmg' --dir dl
+          scripts/update-cask.sh "$VER" dl/*.dmg > deepseek-pet.rb
+      - name: Push to tap
+        env:
+          TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
+        run: |
+          git clone "https://x-access-token:${TAP_TOKEN}@github.com/teochenglim/homebrew-deepseek-pet.git" tap
+          mkdir -p tap/Casks && cp deepseek-pet.rb tap/Casks/
+          cd tap && git add Casks && git -c user.name=release-bot -c user.email=noreply@github.com commit -m "deepseek-pet ${GITHUB_REF_NAME}" && git push

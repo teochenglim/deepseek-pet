@@ -1,0 +1,99 @@
+name: security
+
+# SAST and dependency scanning. SARIF goes to the Security tab; CRITICAL/HIGH CVEs and
+# Semgrep ERROR findings fail the job. Warnings (for example unwrap in upstream code) are reported only.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '0 6 * * 1'   # weekly: new CVEs appear without code changes
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  semgrep:
+    name: Semgrep SAST
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Registry packs IN ADDITION to .semgrep/rules.yaml. Keep every --config line.
+      - name: Scan (report, SARIF)
+        run: |
+          semgrep scan \
+            --config p/rust \
+            --config p/javascript \
+            --config p/github-actions \
+            --config p/secrets \
+            --config p/owasp-top-ten \
+            --config .semgrep/rules.yaml \
+            --exclude target --exclude node_modules --exclude coding-agent-pet --exclude big-blue-fish-desktop-pet \
+            --sarif --output semgrep.sarif
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+
+      - name: Gate (fail on ERROR severity)
+        run: |
+          semgrep scan \
+            --config p/rust \
+            --config p/javascript \
+            --config p/github-actions \
+            --config p/secrets \
+            --config p/owasp-top-ten \
+            --config .semgrep/rules.yaml \
+            --exclude target --exclude node_modules --exclude coding-agent-pet --exclude big-blue-fish-desktop-pet \
+            --severity ERROR --error
+
+      - name: Upload SARIF to GitHub Security tab
+        if: always()
+        continue-on-error: true   # private repo without GHAS must not block
+        uses: github/codeql-action/upload-sarif@54f647b7e1bb85c95cddabcd46b0c578ec92bc1a # v4.36.3
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+
+  # Trivy filesystem scan of Cargo.lock and package-lock.json (no container image in this project).
+  trivy:
+    name: Trivy filesystem scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    env:
+      TRIVY_IMAGE: ghcr.io/aquasecurity/trivy@sha256:790fd66d1697395d8693d1acaa1ea702406a20f109b6fc7bac8db623eca6c06c # v0.76.1
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Scan (fail on CRITICAL/HIGH)
+        run: |
+          docker run --rm -v "$PWD":/workdir -w /workdir "$TRIVY_IMAGE" \
+            fs --skip-dirs coding-agent-pet --skip-dirs big-blue-fish-desktop-pet \
+            --severity CRITICAL,HIGH --scanners vuln --exit-code 1 .
+
+      - name: Scan (SARIF)
+        if: always()
+        run: |
+          docker run --rm -v "$PWD":/workdir -w /workdir "$TRIVY_IMAGE" \
+            fs --skip-dirs coding-agent-pet --skip-dirs big-blue-fish-desktop-pet \
+            --severity CRITICAL,HIGH --scanners vuln --format sarif --output /workdir/trivy-fs.sarif .
+
+      - name: Upload SARIF to GitHub Security tab
+        if: always()
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@54f647b7e1bb85c95cddabcd46b0c578ec92bc1a # v4.36.3
+        with:
+          sarif_file: trivy-fs.sarif
+          category: trivy-fs

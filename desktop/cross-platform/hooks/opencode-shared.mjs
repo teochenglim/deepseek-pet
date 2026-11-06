@@ -1,0 +1,251 @@
+import * as fs from "node:fs";
+import * as net from "node:net";
+import * as os from "node:os";
+import * as path from "node:path";
+
+export const DEFAULT_STATE = { state: "idle", dialogue: "" };
+export const POST_TOOL_STATE = { state: "running", dialogue: "处理中..." };
+export const DEFAULT_TERMINAL_EVENTS = ["StopFailure"];
+
+// 调试日志路径。默认用 OS 临时目录（os.tmpdir() 跨平台：Windows 上返回 %TEMP%，
+// Unix 上返回 /tmp），这样在平台目录解析之前写下的早期日志也能成功——若硬编码
+// /tmp 在 Windows 上会 ENOENT。一旦 loadPluginRuntime() 解析出平台目录，就会
+// 调用 setDebugLogPath() 把日志固定到 <platformDir>/runtime/，与 Python hook 的
+// runtime/ 约定一致。
+let debugLogPath = path.join(os.tmpdir(), "kotori-pet-opencode-debug.log");
+
+export function setDebugLogPath(filePath) {
+  debugLogPath = filePath;
+}
+
+function isDebugEnabled() {
+  const raw = process.env.KOTORI_PET_OPENCODE_DEBUG;
+  return raw === "1" || raw === "true";
+}
+
+export const OPENCODE_TO_PET = {
+  "session.created": "SessionStart",
+  "session.idle": "Stop",
+  "session.error": "StopFailure",
+  "session.deleted": "SessionEnd",
+  "session.compacted": "PreCompact",
+  "permission.asked": "PermissionRequest",
+  "tool.execute.before": "PreToolUse",
+  "tool.execute.after": "PostToolUse",
+};
+
+export function debug(message, data) {
+  if (!isDebugEnabled()) return;
+  try {
+    const suffix = data ? ` ${JSON.stringify(data)}` : "";
+    const line = `[${new Date().toISOString()}] ${message}${suffix}\n`;
+    fs.appendFileSync(debugLogPath, line);
+  } catch {
+    // 仅尽力而为。
+  }
+}
+
+export function toNativeImportPath(importMetaUrl) {
+  return new URL(importMetaUrl).pathname.replace(/^\/([A-Z]:)/, "$1");
+}
+
+export function readJson(filePath) {
+  return JSON.parse(fs.readFileSync(filePath, "utf-8"));
+}
+
+export function findConfigPath(platformDir) {
+  const configPath = path.join(platformDir, "config.json");
+  if (fs.existsSync(configPath)) return configPath;
+
+  const examplePath = path.join(platformDir, "config.example.json");
+  return fs.existsSync(examplePath) ? examplePath : null;
+}
+
+export function detectRepoRoot(platformDir) {
+  const normalized = path.resolve(platformDir);
+  const base = path.basename(normalized);
+  const parent = path.basename(path.dirname(normalized));
+  if (base === "cross-platform" && parent === "desktop") {
+    return path.resolve(normalized, "..", "..");
+  }
+  return path.dirname(normalized);
+}
+
+export function loadPluginRuntime(importMetaUrl) {
+  try {
+    const deployedDir = path.dirname(toNativeImportPath(importMetaUrl));
+    const companionPath = path.join(deployedDir, ".kotori-pet-config-dir");
+
+    if (!fs.existsSync(companionPath)) {
+      debug("Companion file not found", { companionPath });
+      return null;
+    }
+
+    const platformDir = fs.readFileSync(companionPath, "utf-8").trim();
+    if (!platformDir || !fs.existsSync(platformDir)) {
+      debug("Invalid platform dir", { platformDir });
+      return null;
+    }
+
+    const configPath = findConfigPath(platformDir);
+    if (!configPath) {
+      debug("No config found", { platformDir });
+      return null;
+    }
+
+    const repoRoot = detectRepoRoot(platformDir);
+
+    // 把调试日志固定到 <platformDir>/runtime/，与 Python hook 一致。
+    // （更早的日志写到 os.tmpdir()；从这里开始，它们会落在 claude_hook.py /
+    // codex_hook.py 写入的 hook-events.log 旁边。）
+    setDebugLogPath(path.join(platformDir, "runtime", "kotori-pet-opencode-debug.log"));
+
+    return {
+      platformDir,
+      repoRoot,
+      config: readJson(configPath),
+      configPath,
+    };
+  } catch (error) {
+    debug("Config load error", { error: String(error) });
+    return null;
+  }
+}
+
+export function resolvePath(configValue, baseDir, fallbackParts) {
+  if (typeof configValue === "string" && configValue.trim()) {
+    const expanded = configValue.startsWith("~")
+      ? path.join(resolveHomeDir(), configValue.slice(1))
+      : configValue;
+    return path.isAbsolute(expanded) ? expanded : path.join(baseDir, expanded);
+  }
+
+  return path.join(baseDir, ...fallbackParts);
+}
+
+function resolveHomeDir() {
+  if (process.platform === "win32") {
+    if (process.env.USERPROFILE) return process.env.USERPROFILE;
+    if (process.env.HOMEDRIVE && process.env.HOMEPATH) {
+      return `${process.env.HOMEDRIVE}${process.env.HOMEPATH}`;
+    }
+  }
+  return process.env.HOME || "/";
+}
+
+export function isWsl(env = process.env, procVersionText = null) {
+  if (env.WSL_DISTRO_NAME || env.WSL_INTEROP) return true;
+  try {
+    const version =
+      procVersionText === null ? fs.readFileSync("/proc/version", "utf-8") : procVersionText;
+    return version.toLowerCase().includes("microsoft");
+  } catch {
+    return false;
+  }
+}
+
+export function defaultEventEndpoint(config = {}, options = {}) {
+  if (typeof config.event_endpoint === "string" && config.event_endpoint.trim()) {
+    return config.event_endpoint.trim();
+  }
+  if (process.platform === "win32" || isWsl(options.env, options.procVersionText)) {
+    return "tcp://127.0.0.1:17361";
+  }
+  return config.socket_path || "/tmp/kotori-pet.sock";
+}
+
+export function resolvePetBaseDir(config, repoRoot) {
+  return resolvePath(config?.pet_base_dir, repoRoot, []);
+}
+
+export function resolveState(eventName, stateMap = {}) {
+  if (eventName === "PostToolUse") {
+    return { ...POST_TOOL_STATE };
+  }
+
+  return { ...(stateMap[eventName] ?? DEFAULT_STATE) };
+}
+
+export function resolveToolEvent(toolName) {
+  return toolName === "question" ? "QuestionAsked" : "PreToolUse";
+}
+
+export function resolveSessionId(payload = {}) {
+  return payload?.properties?.sessionID ?? payload?.sessionID ?? "unknown";
+}
+
+export function buildPayload({ config, eventName, sessionId, cwd, toolName }) {
+  const petId = config?.pet_id || "big-blue-fish";
+  const stateMap = config?.state_map || {};
+  const terminalEvents = new Set(config?.terminal_events || DEFAULT_TERMINAL_EVENTS);
+  const { state, dialogue } = resolveState(eventName, stateMap);
+
+  return {
+    petId,
+    state,
+    dialogue,
+    event: eventName,
+    source: "opencode",
+    session_id: sessionId,
+    updatedAt: new Date().toISOString(),
+    isTerminal: terminalEvents.has(eventName),
+    context: {
+      cwd,
+      tool_name: toolName || "",
+    },
+  };
+}
+
+export async function writeSession(filePath, payload) {
+  try {
+    const tmpFile = `${filePath}.tmp`;
+    await fs.promises.writeFile(tmpFile, JSON.stringify(payload, null, 2), "utf-8");
+    await fs.promises.rename(tmpFile, filePath);
+  } catch {
+    // 仅尽力而为。
+  }
+}
+
+function pushTcp(endpoint, payload) {
+  try {
+    const url = new URL(endpoint);
+    const port = Number(url.port);
+    if (!port) return;
+
+    const socket = net.createConnection({ host: url.hostname || "127.0.0.1", port }, () => {
+      socket.write(JSON.stringify(payload), () => socket.end());
+    });
+    socket.setTimeout(100);
+    socket.on("timeout", () => socket.destroy());
+    socket.on("error", () => socket.destroy());
+  } catch {
+    // 仅尽力而为。
+  }
+}
+
+function pushUnixSocket(socketPath, payload) {
+  try {
+    if (!fs.existsSync(socketPath)) return;
+
+    const socket = net.createConnection(socketPath, () => {
+      socket.write(`${JSON.stringify(payload)}\n`, () => socket.end());
+    });
+    socket.setTimeout(100);
+    socket.on("timeout", () => socket.destroy());
+    socket.on("error", () => socket.destroy());
+  } catch {
+    // 仅尽力而为。
+  }
+}
+
+export function pushEvent(endpoint, payload) {
+  if (typeof endpoint === "string" && endpoint.startsWith("tcp://")) {
+    pushTcp(endpoint, payload);
+    return;
+  }
+  if (process.platform !== "win32") {
+    pushUnixSocket(endpoint, payload);
+  }
+}
+
+export const pushSocket = pushUnixSocket;

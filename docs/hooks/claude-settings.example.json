@@ -1,0 +1,7 @@
+{
+  "hooks": {
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": "/ABS/PATH/TO/deepseek-pet/desktop/cross-platform/hooks/pet-hook.sh claude-code" } ] }
+    ]
+  }
+}

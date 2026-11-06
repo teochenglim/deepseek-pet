@@ -1,0 +1,56 @@
+{
+  "_comment": "将此文件复制为 config.json 后按需自定义。值为 null 的字段会被自动检测。",
+  "pet_id": "big-blue-fish",
+  "pet_base_dir": null,
+  "frames_dir": null,
+  "event_endpoint": null,
+  "socket_path": "/tmp/kotori-pet.sock",
+  "sessions_dir": null,
+  "renderer": {
+    "scale": 0.6,
+    "fps": 10,
+    "_frame_timing_comment": "逐帧停留 tick 数（单位为 fps tick）。idle：第 0/1/2/4/5 帧睁眼，第 3 帧眨眼；合计 35 tick = 在 10fps 下 3.5s。",
+    "frame_timing": {
+      "default": { "holds": [1] },
+      "idle": { "holds": [10, 4, 4, 1, 4, 12] }
+    },
+    "_stale_timeout_sec_comment": "会话文件保持不变多久（秒）后被视为已死。1h 覆盖读取/思考/长时间工具调用；崩溃的进程在此 TTL 后被清理。",
+    "stale_timeout_sec": 3600,
+    "cleanup_interval_sec": 30,
+    "corner_margin": 20
+  },
+  "dialogue": {
+    "font_size": 10,
+    "max_width": 160,
+    "cornerRadius": 6,
+    "fade_duration_sec": 0.3,
+    "style_map": {
+      "waiting": "warning",
+      "failed": "error"
+    }
+  },
+  "hooks": {
+    "_python_command_comment": "仅 Windows：运行宠物 hook 脚本的确切命令。null = 自动探测（python / py -3）。可设为 'python'、'py -3' 或 'C:/Python313/python.exe' 以固定解释器，避免 conda/PATH 漂移——写入任何 hook 前会用 `<cmd> --version` 校验，失败则中止安装。",
+    "python_command": null,
+    "claude_code_settings": null,
+    "codex_hooks": null,
+    "opencode_plugins_dir": null
+  },
+  "terminal_events": ["StopFailure", "SessionEnd"],
+  "state_map": {
+    "SessionStart": { "state": "waving", "dialogue": "嗨！小鸟来啦～" },
+    "UserPromptSubmit": { "state": "running", "dialogue": "收到！开始工作～" },
+    "PreToolUse": { "state": "running", "dialogue": "执行中..." },
+    "Stop": { "state": "jumping", "dialogue": "搞定啦！✨" },
+    "StopFailure": { "state": "failed", "dialogue": "呜...出了点问题" },
+    "Notification": { "state": "waving", "dialogue": "注意哦～" },
+    "PermissionRequest": { "state": "waiting", "dialogue": "需要你的授权～" },
+    "SubagentStop": { "state": "idle", "dialogue": "" },
+    "PreCompact": { "state": "waiting", "dialogue": "整理一下记忆..." },
+    "SessionEnd": { "state": "waving", "dialogue": "下次见！♪" },
+    "QuestionAsked": { "state": "waiting", "dialogue": "需要你的选择～" }
+  },
+  "menu": {
+    "items": [{ "title": "关闭宠物", "action": "quit" }]
+  }
+}

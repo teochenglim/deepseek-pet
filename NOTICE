@@ -1,0 +1,19 @@
+deepseek-pet
+Copyright 2026 teochenglim. Licensed under the Apache License 2.0 (see LICENSE).
+
+This product includes third-party material:
+
+1. Code skeleton: golitter/coding-agent-pet (Tauri v2 shell, hook channel,
+   session aggregator, window management), copied into desktop/.
+   https://github.com/golitter/coding-agent-pet
+   License: MIT (stated in its README; upstream ships no LICENSE file - re-confirm
+   before 1.0.0 and keep its copyright notice here once located).
+
+2. Animation assets: Bai-Cute/big-blue-fish-desktop-pet (Big Blue Fish VP9-alpha
+   WebM animations). https://github.com/Bai-Cute/big-blue-fish-desktop-pet
+   License: Apache License 2.0 (its LICENSE file; NOT MIT as the PRD first assumed).
+   Converted frames under assets/big-blue-fish/frames/ are derived works; their
+   source WebM files are recorded in assets/big-blue-fish/frames/PROVENANCE.md.
+
+Third-party crate and npm licenses: see Cargo.lock / package-lock.json
+(checked by `make audit` via cargo-deny).

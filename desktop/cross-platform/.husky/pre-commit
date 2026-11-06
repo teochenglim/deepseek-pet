@@ -1,0 +1,19 @@
+#!/usr/bin/env sh
+# macOS pre-commit entrypoint.
+
+repo_root=$(git rev-parse --show-toplevel) || exit 1
+cd "$repo_root/desktop/cross-platform" || exit 1
+
+# Frontend: Prettier + ESLint through lint-staged.
+npx lint-staged || exit 1
+
+# Rust: fmt check, all files because cargo fmt has no staged-only mode.
+cd src-tauri || exit 1
+cargo fmt --check --quiet 2>/dev/null
+if [ $? -ne 0 ]; then
+  echo "cargo fmt check failed. Run 'cargo fmt' in src-tauri/ to fix."
+  exit 1
+fi
+cd ..
+
+# Shell and Python checks are left to `make check` and CI.

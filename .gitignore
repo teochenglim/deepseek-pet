@@ -1,0 +1,14 @@
+# Reference repos (upstream clones, not part of this project)
+/big-blue-fish-desktop-pet/
+/coding-agent-pet/
+
+# build output
+target/
+node_modules/
+bin/
+dist/
+.DS_Store
+# converted frames are generated: keep only the committed idle still until 0.2.0
+/assets/webm/
+desktop/cross-platform/runtime/
+desktop/cross-platform/config.json

@@ -1,0 +1,32 @@
+{
+  "name": "kotori-pet",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "build:app": "tauri build --bundles app",
+    "test": "npm run test:hooks",
+    "test:hooks": "python -m unittest hooks/scripts/test_hooks.py && node --test hooks/tests/opencode-shared.test.mjs",
+    "lint": "eslint src && prettier --check .",
+    "lint:fix": "eslint --fix src && prettier --write .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "cd ../.. && husky desktop/cross-platform/.husky"
+  },
+  "lint-staged": {
+    "src/**/*.{js,html,css}": "prettier --write",
+    "src/**/*.js": "eslint --fix",
+    "hooks/**/*.{ts,mjs}": "prettier --write",
+    "*.{json,md,mjs,yml,yaml}": "prettier --write"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2",
+    "eslint": "^9.10.0",
+    "globals": "^15.0.0",
+    "husky": "^9.1.0",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.3.3"
+  }
+}

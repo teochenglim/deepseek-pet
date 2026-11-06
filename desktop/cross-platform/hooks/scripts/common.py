@@ -219,7 +219,9 @@ def apply_mapping(state_info, entry):
     return info, None
 
 
-CLIP_GAP_SEC = 12  # a default clip lasts about 10 s; a faster event stream must not restart it
+CLIP_GAP_SEC = 11  # a default clip lasts about 10 s; a faster event stream must not restart it
+# The stamp is per source: with one shared stamp, a busy Claude Code session kept ZCode's clips
+# from ever firing (only the active source's clips play), so the fish just stood there.
 
 
 def pick_default_clip(entry, stamp_path, now=None, rng=random):
@@ -322,7 +324,7 @@ def process_event(platform_dir, source, hook_event, session_id, tool_name,
     state_info, clip = apply_mapping(state_info, entry)
     if clip is None and not isinstance(entry, dict):
         # no menu choice for this event: the default pool (varied work animations) applies
-        clip = pick_default_clip(default_pool, os.path.join(os.path.dirname(sessions_dir), '.last-default-clip'))
+        clip = pick_default_clip(default_pool, os.path.join(os.path.dirname(sessions_dir), f'.last-default-clip-{source}'))
     pet_state = state_info.get('state', 'idle')
     dialogue = state_info.get('dialogue', '')
 

@@ -1,9 +1,10 @@
 //! App settings that the user changes from the menu-bar icon, stored in `~/.deepseek-pet/settings.json`:
 //!
 //! ```json
-//! {"version": 1, "active_source": "claude-code"}
+//! {"version": 1, "active_source": "claude-code", "language": "zh"}
 //! ```
 //! `active_source` absent means every source drives the pet (the default).
+//! `language` absent means English.
 use serde::{Deserialize, Serialize};
 use std::io;
 use std::path::Path;
@@ -13,6 +14,9 @@ use std::sync::Mutex;
 pub struct Settings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub active_source: Option<String>,
+    /// `"zh"` for Chinese; absent or anything else is English.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub language: Option<String>,
 }
 
 impl Settings {
@@ -59,11 +63,28 @@ mod tests {
         let path = dir.join("settings.json");
         let s = Settings {
             active_source: Some("claude-code".into()),
+            language: Some("zh".into()),
         };
         s.save(&path).unwrap();
         assert_eq!(Settings::load(&path), s);
         Settings::default().save(&path).unwrap();
         assert_eq!(Settings::load(&path).active_source, None, "all sources");
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn ac_0_8_10_language_survives_a_restart() {
+        let dir = temp("lang");
+        let path = dir.join("settings.json");
+        Settings {
+            active_source: None,
+            language: Some("zh".into()),
+        }
+        .save(&path)
+        .unwrap();
+        assert_eq!(Settings::load(&path).language.as_deref(), Some("zh"));
+        std::fs::write(&path, r#"{"version":1,"active_source":"zai"}"#).unwrap();
+        assert_eq!(Settings::load(&path).language, None, "English by default");
         let _ = std::fs::remove_dir_all(dir);
     }
 

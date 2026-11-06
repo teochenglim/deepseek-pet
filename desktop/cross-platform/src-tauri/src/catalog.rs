@@ -8,10 +8,23 @@ use tracing::warn;
 pub struct Clip {
     pub id: String,
     pub title: String,
+    #[serde(default)]
+    pub title_zh: String,
     pub category: String,
     pub frames: u32,
     #[serde(default = "default_fps")]
     pub fps: u32,
+}
+
+impl Clip {
+    /// Title in the language chosen in the menu; falls back to English when there is no Chinese one.
+    pub fn display_title(&self) -> &str {
+        if crate::i18n::is_zh() && !self.title_zh.is_empty() {
+            &self.title_zh
+        } else {
+            &self.title
+        }
+    }
 }
 
 fn default_fps() -> u32 {
@@ -73,6 +86,7 @@ mod tests {
         Clip {
             id: id.into(),
             title: title.into(),
+            title_zh: String::new(),
             category: category.into(),
             frames: 16,
             fps: 8,

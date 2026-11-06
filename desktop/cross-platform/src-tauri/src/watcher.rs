@@ -121,7 +121,7 @@ where
 
     let session_id = json["session_id"].as_str().unwrap_or("unknown").to_string();
     let state = json["state"].as_str().unwrap_or("idle").to_string();
-    let dialogue = json["dialogue"].as_str().unwrap_or("").to_string();
+    let dialogue = crate::i18n::dialogue(json["dialogue"].as_str().unwrap_or(""));
     let source = json["source"].as_str().unwrap_or("").to_string();
     let is_terminal = json["isTerminal"].as_bool().unwrap_or(false);
     let event = json["event"].as_str().unwrap_or("").to_string();

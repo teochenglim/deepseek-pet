@@ -8,6 +8,7 @@ mod commands;
 mod config;
 mod home;
 mod hooks;
+mod i18n;
 mod mapping;
 mod menus;
 mod settings;
@@ -176,6 +177,7 @@ pub fn run() {
             ))));
             let saved = settings::Settings::load(&home::user_home_dir().join("settings.json"));
             session_mgr.set_active_source(saved.active_source.clone());
+            i18n::set_zh(i18n::is_zh_code(saved.language.as_deref()));
             app.manage(settings::SettingsStore(std::sync::Mutex::new(saved)));
             app.manage(mapping::MappingStore::new(mapping::Mapping::load(
                 &home::user_home_dir().join("mapping.json"),

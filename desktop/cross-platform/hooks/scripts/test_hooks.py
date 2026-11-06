@@ -361,6 +361,32 @@ class MappingTests(unittest.TestCase):
             self.assertIsNone(common.pick_default_clip(entry, stamp, now=1005.0))
             self.assertIsNotNone(common.pick_default_clip(entry, stamp, now=1000.0 + common.CLIP_GAP_SEC + 1))
 
+    def test_ac_0_8_11_each_source_has_its_own_clip_throttle(self):
+        import common
+        with tempfile.TemporaryDirectory() as d:
+            home = Path(d) / 'home'
+            home.mkdir()
+            platform = Path(d) / 'platform'
+            platform.mkdir()
+            sessions = Path(d) / 'sessions'
+            (platform / 'config.json').write_text(json.dumps({
+                'sessions_dir': str(sessions),
+                'event_endpoint': str(Path(d) / 'nobody.sock'),
+                'state_map': {'PreToolUse': {'state': 'running', 'dialogue': 'Working...', 'clips': ['c013']}},
+            }))
+            old = os.environ.get('DEEPSEEK_PET_HOME')
+            os.environ['DEEPSEEK_PET_HOME'] = str(home)
+            try:
+                for source in ('claude-code', 'zai'):
+                    common.process_event(str(platform), source, 'PreToolUse', 's-' + source, 'Bash')
+            finally:
+                if old is None:
+                    del os.environ['DEEPSEEK_PET_HOME']
+                else:
+                    os.environ['DEEPSEEK_PET_HOME'] = old
+            stamps = sorted(p.name for p in Path(d).glob('.last-default-clip-*'))
+            self.assertEqual(stamps, ['.last-default-clip-claude-code', '.last-default-clip-zai'])
+
     def test_ac_0_8_9_no_pool_means_no_clip(self):
         import common
         with tempfile.TemporaryDirectory() as d:

@@ -4,6 +4,7 @@
 use crate::aggregator::ActivityAggregator;
 use crate::catalog::{self, Clip};
 use crate::hooks::{self, Installer, Status};
+use crate::i18n::{self, tr};
 use crate::mapping::{self, AgentDef, Choice, Mapping, MappingStore, MAPPABLE_STATES};
 use crate::settings::SettingsStore;
 use std::sync::Arc;
@@ -34,6 +35,8 @@ pub enum Action {
         event: String,
     },
     MapReset,
+    /// Switch the menus and the bubble between English and Chinese.
+    ToggleLanguage,
     /// Let one source drive the pet (`Some(agent id)`), or all of them (`None`).
     Source(Option<String>),
     /// Install (`true`) or remove (`false`) the pet's hooks in one agent.
@@ -51,6 +54,7 @@ pub fn parse_action(id: &str, prefix: &str) -> Option<Action> {
         "hide" => Some(Action::Hide),
         "quit" => Some(Action::Quit),
         "map-reset" => Some(Action::MapReset),
+        "lang" => Some(Action::ToggleLanguage),
         _ => {
             if let Some(wanted) = rest.strip_prefix("play:") {
                 return Some(Action::Play(wanted.to_string()));
@@ -114,18 +118,23 @@ pub fn play_entries(
     let random = MenuItem::with_id(
         app,
         format!("{prefix}play:random"),
-        "Random animation",
+        tr("Random animation", "随机动画"),
         !clips.is_empty(),
         None::<&str>,
     )?;
     let mut categories = Vec::new();
     for (category, group) in catalog::group_by_category(clips) {
-        let sub = Submenu::with_id(app, format!("{prefix}cat:{category}"), &category, true)?;
+        let sub = Submenu::with_id(
+            app,
+            format!("{prefix}cat:{category}"),
+            i18n::category(&category),
+            true,
+        )?;
         for clip in group {
             sub.append(&MenuItem::with_id(
                 app,
                 format!("{prefix}play:{}", clip.id),
-                &clip.title,
+                clip.display_title(),
                 true,
                 None::<&str>,
             )?)?;
@@ -150,14 +159,14 @@ pub fn pet_popup(app: &AppHandle, clips: &[Clip]) -> tauri::Result<Menu<Wry>> {
     menu.append(&MenuItem::with_id(
         app,
         format!("{POPUP_PREFIX}hide"),
-        "Hide for now",
+        tr("Hide for now", "暂时隐藏"),
         true,
         None::<&str>,
     )?)?;
     menu.append(&MenuItem::with_id(
         app,
         format!("{POPUP_PREFIX}quit"),
-        "Quit",
+        tr("Quit", "退出"),
         true,
         None::<&str>,
     )?)?;
@@ -166,7 +175,7 @@ pub fn pet_popup(app: &AppHandle, clips: &[Clip]) -> tauri::Result<Menu<Wry>> {
 
 fn choice_label(choice: Option<&Choice>, clips: &[Clip]) -> String {
     match choice {
-        None => "default".to_string(),
+        None => tr("default", "默认").to_string(),
         Some(Choice::State(s)) => MAPPABLE_STATES
             .iter()
             .find(|(id, _)| id == s)
@@ -174,8 +183,8 @@ fn choice_label(choice: Option<&Choice>, clips: &[Clip]) -> String {
         Some(Choice::Clip(id)) => clips
             .iter()
             .find(|c| &c.id == id)
-            .map_or(id.clone(), |c| c.title.clone()),
-        Some(Choice::Off(_)) => "no animation".to_string(),
+            .map_or(id.clone(), |c| c.display_title().to_string()),
+        Some(Choice::Off(_)) => tr("no animation", "无动画").to_string(),
     }
 }
 
@@ -195,13 +204,18 @@ fn event_submenu(
     sub.append(&CheckMenuItem::with_id(
         app,
         id("default"),
-        "Default",
+        tr("Default", "默认"),
         true,
         current.is_none(),
         None::<&str>,
     )?)?;
 
-    let states = Submenu::with_id(app, format!("mapst:{agent}:{event}"), "State", true)?;
+    let states = Submenu::with_id(
+        app,
+        format!("mapst:{agent}:{event}"),
+        tr("State", "状态"),
+        true,
+    )?;
     for (state, label) in MAPPABLE_STATES {
         let checked = matches!(current, Some(Choice::State(s)) if s == state);
         states.append(&CheckMenuItem::with_id(
@@ -218,14 +232,14 @@ fn event_submenu(
     let clip_menu = Submenu::with_id(
         app,
         format!("mapcl:{agent}:{event}"),
-        "Clip",
+        tr("Clip", "动画"),
         !clips.is_empty(),
     )?;
     for (category, group) in catalog::group_by_category(clips) {
         let cat = Submenu::with_id(
             app,
             format!("mapcat:{agent}:{event}:{category}"),
-            &category,
+            i18n::category(&category),
             true,
         )?;
         for clip in group {
@@ -233,7 +247,7 @@ fn event_submenu(
             cat.append(&CheckMenuItem::with_id(
                 app,
                 id(&format!("clip:{}", clip.id)),
-                &clip.title,
+                clip.display_title(),
                 true,
                 checked,
                 None::<&str>,
@@ -244,8 +258,12 @@ fn event_submenu(
     sub.append(&clip_menu)?;
 
     let last_text = match last {
-        Some(c) => format!("Use last played: {}", c.title),
-        None => "Use last played clip".to_string(),
+        Some(c) => format!(
+            "{}: {}",
+            tr("Use last played", "使用上次播放"),
+            c.display_title()
+        ),
+        None => tr("Use last played clip", "使用上次播放的动画").to_string(),
     };
     sub.append(&MenuItem::with_id(
         app,
@@ -257,7 +275,7 @@ fn event_submenu(
     sub.append(&CheckMenuItem::with_id(
         app,
         id("off"),
-        "No animation",
+        tr("No animation", "无动画"),
         true,
         matches!(current, Some(Choice::Off(_))),
         None::<&str>,
@@ -273,12 +291,12 @@ fn map_menu(
     last: Option<&Clip>,
     installed: &[&AgentDef],
 ) -> tauri::Result<Submenu<Wry>> {
-    let root = Submenu::with_id(app, "map", "Map animations", true)?;
+    let root = Submenu::with_id(app, "map", tr("Map animations", "映射动画"), true)?;
     if installed.is_empty() {
         root.append(&MenuItem::with_id(
             app,
             "map-none",
-            "Install hooks for an agent first",
+            tr("Install hooks for an agent first", "请先为某个代理安装钩子"),
             false,
             None::<&str>,
         )?)?;
@@ -302,11 +320,20 @@ fn map_menu(
     root.append(&MenuItem::with_id(
         app,
         "map-reset",
-        "Reset all to defaults",
+        tr("Reset all to defaults", "全部恢复默认"),
         true,
         None::<&str>,
     )?)?;
     Ok(root)
+}
+
+/// The language button names the language it switches to.
+pub fn language_label() -> &'static str {
+    if i18n::is_zh() {
+        "Language: switch to English"
+    } else {
+        "语言: 切换到中文"
+    }
 }
 
 /// First line of the menu-bar menu, so you can tell which build is running.
@@ -317,13 +344,13 @@ pub fn version_label() -> String {
 /// Title of the "Active source" submenu, naming the current choice.
 pub fn source_title(active: Option<&str>) -> String {
     let name = match active {
-        None => "all sources".to_string(),
+        None => tr("all sources", "全部来源").to_string(),
         Some(id) => mapping::agents()
             .iter()
             .find(|a| a.id == id)
             .map_or(id.to_string(), |a| a.label.clone()),
     };
-    format!("Active source  ({name})")
+    format!("{}  ({name})", tr("Active source", "活动来源"))
 }
 
 /// "Active source": which agent drives the pet. Only installed agents (and the current choice) are offered.
@@ -336,7 +363,7 @@ fn source_menu(
     root.append(&CheckMenuItem::with_id(
         app,
         "src:all",
-        "All sources",
+        tr("All sources", "全部来源"),
         true,
         active.is_none(),
         None::<&str>,
@@ -367,7 +394,7 @@ fn source_menu(
 
 /// "Install hooks": one row per agent, click to install or remove.
 fn hooks_menu(app: &AppHandle, installer_ok: bool, status: &Status) -> tauri::Result<Submenu<Wry>> {
-    let root = Submenu::with_id(app, "hooks", "Install hooks", true)?;
+    let root = Submenu::with_id(app, "hooks", tr("Install hooks", "安装钩子"), true)?;
     if !installer_ok {
         root.append(&MenuItem::with_id(
             app,
@@ -403,8 +430,19 @@ pub fn build_tray_menu(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
         .and_then(|id| clips.iter().find(|c| c.id == id));
 
     let version = MenuItem::with_id(app, "version", version_label(), false, None::<&str>)?;
-    let show = MenuItem::with_id(app, "show", "Show Big Blue Fish", true, None::<&str>)?;
-    let play = Submenu::with_id(app, "play", "Play animation", !clips.is_empty())?;
+    let show = MenuItem::with_id(
+        app,
+        "show",
+        tr("Show Big Blue Fish", "显示大蓝鱼"),
+        true,
+        None::<&str>,
+    )?;
+    let play = Submenu::with_id(
+        app,
+        "play",
+        tr("Play animation", "播放动画"),
+        !clips.is_empty(),
+    )?;
     let (random, categories) = play_entries(app, &clips, "")?;
     play.append(&random)?;
     let items: Vec<&dyn IsMenuItem<Wry>> = categories
@@ -424,7 +462,8 @@ pub fn build_tray_menu(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
     let map = map_menu(app, &clips, &mapping, last, &installed)?;
     let source = source_menu(app, &installed, active.as_deref())?;
     let install = hooks_menu(app, installer.is_some(), &status)?;
-    let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", tr("Quit", "退出"), true, None::<&str>)?;
+    let language = MenuItem::with_id(app, "lang", language_label(), true, None::<&str>)?;
     let menu = Menu::with_items(
         app,
         &[
@@ -436,6 +475,7 @@ pub fn build_tray_menu(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
             &PredefinedMenuItem::separator(app)?,
             &source,
             &install,
+            &language,
             &PredefinedMenuItem::separator(app)?,
             &quit,
         ],
@@ -584,6 +624,21 @@ pub fn run(app: &AppHandle, action: Action) {
             }
             refresh_tray(app);
         }
+        Action::ToggleLanguage => {
+            let zh = !i18n::is_zh();
+            i18n::set_zh(zh);
+            if let Some(store) = app.try_state::<SettingsStore>() {
+                if let Ok(mut settings) = store.0.lock() {
+                    settings.language = zh.then(|| "zh".to_string());
+                    if let Err(e) =
+                        settings.save(&crate::home::user_home_dir().join("settings.json"))
+                    {
+                        tracing::warn!("Cannot save settings: {e}");
+                    }
+                }
+            }
+            refresh_tray(app);
+        }
         Action::MapReset => {
             if let Some(store) = app.try_state::<MappingStore>() {
                 if let Ok(mut m) = store.mapping.lock() {
@@ -599,6 +654,17 @@ pub fn run(app: &AppHandle, action: Action) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn ac_0_8_10_language_button_parses_and_names_the_target() {
+        assert_eq!(parse_action("lang", ""), Some(Action::ToggleLanguage));
+        assert_eq!(
+            parse_action("pop:lang", POPUP_PREFIX),
+            Some(Action::ToggleLanguage)
+        );
+        let label = language_label();
+        assert!(label.contains("English") || label.contains("中文"));
+    }
 
     #[test]
     fn ac_0_6_5_menu_ids_parse() {

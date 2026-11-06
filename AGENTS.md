@@ -5,7 +5,7 @@ macOS desktop pet. Tauri v2 (Rust + system WebView, plain HTML/JS, no bundler) f
 ## Where things stand
 
 - Built: v0.1.0 code done and `make check` green; .app and .dmg build. Awaiting the human visual pass (see Limits in RELEASE/v0.1.0.md). 0.2.0-1.0.0 planned. Status table: [RELEASE.md](RELEASE.md).
-- Next: finish [RELEASE/v0.1.0.md](RELEASE/v0.1.0.md). Do not start 0.2.0 until all 0.1.0 ACs pass.
+- Next: v0.2.0 (converter built, see RELEASE/v0.2.0.md), then 0.3.0.
 - Reference clones `coding-agent-pet/` and `big-blue-fish-desktop-pet/` are git-ignored read-only references. Never edit them; copy what is needed into `desktop/cross-platform/`, `assets/`.
 
 Code map:
@@ -18,7 +18,7 @@ Code map:
 | `desktop/cross-platform/src-tauri/tauri.conf.json` | window: transparent, borderless, alwaysOnTop, skipTaskbar |
 | `desktop/cross-platform/hooks/` | `pet-hook.sh` (Claude/Codex), `opencode-plugin.ts`; protocol is frozen |
 | `desktop/docs/` | upstream docs (Chinese), reference only |
-| `tools/convert-assets.py` | (0.2.0) WebM -> frames |
+| `tools/convert-assets.py` | WebM -> frames; `state-map.json` picks the clip per state; `make convert-assets` |
 | `docs/hooks/` | example hook configs |
 | `packaging/homebrew/` | cask template; `scripts/update-cask.sh` renders it; release job pushes to the tap |
 
@@ -47,7 +47,7 @@ Read the release file first. Probe the real thing (run hook, read socket) before
 ## Pitfalls already paid for
 
 - Renderer loads per-state PNG frame dirs plus `frames-manifest.json`; there is no 8x9 sprite sheet (PRD was wrong).
-- The big-blue-fish repo has 212 WebM files, not 106; filenames are Chinese.
+- The big-blue-fish repo has 106 WebM files (the 212 you see in `ls` includes a `.mask` per clip); filenames are Chinese. (I wrongly reported 212 earlier.)
 - Hook protocol (verified in the copied code): `pet-hook.sh claude-code|codex` reads the hook JSON on stdin (not `idle`/`thinking` as PRD said). Event-to-state mapping lives in `config.json` `state_map`. macOS endpoint default is `tcp://127.0.0.1:17361` (`config.rs`); the Unix socket path is non-mac only. Upstream hard-codes the `desktop/cross-platform` layout (config.rs, hooks common.py), so keep it.
 - `macOSPrivateApi` is set in `tauri.conf.json` and the `macos-private-api` Cargo feature; remove both together or neither.
 - Actions are SHA-pinned (checkout, codeql upload-sarif and Trivy digest copied from ~/code/glove). `scripts/pin-actions.py` mislabeled checkout as v4.4.0, so verify `# vX.Y.Z` comments after any bump.

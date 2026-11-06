@@ -1,0 +1,18 @@
+{
+  "idle": {
+    "source": "待机呼吸休闲.webm",
+    "note": "idle breathing loop"
+  },
+  "running-right": {
+    "source": "工作状态-忙碌点按.webm",
+    "note": "busy tapping, used while a tool runs"
+  },
+  "failed": {
+    "source": "工作状态-垂头叹气冒汗.webm",
+    "note": "head-down sigh with sweat"
+  },
+  "running": {
+    "source": "工作状态-忙碌点按.webm",
+    "note": "same busy-tapping clip; the hook state_map sends PreToolUse to 'running' until 0.3.0 remaps it"
+  }
+}

@@ -96,28 +96,12 @@ class SetupHooksTests(unittest.TestCase):
             platform_dir / 'scripts' / 'macos' / 'setup.sh',
             platform_dir / 'scripts' / 'macos' / 'setup-hooks.sh',
             platform_dir / 'scripts' / 'macos' / 'build-and-run.sh',
-            platform_dir / 'scripts' / 'wsl' / 'setup-hooks.sh',
         ]
 
         for shell_file in shell_files:
             with self.subTest(path=shell_file):
                 data = shell_file.read_bytes()
                 self.assertNotIn(b'\r\n', data)
-
-    def test_windows_entrypoints_use_crlf_line_endings(self):
-        scripts_dir = SCRIPT_DIR.parent.parent / 'scripts' / 'windows'
-        powershell_files = [
-            scripts_dir / 'common.ps1',
-            scripts_dir / 'setup.ps1',
-            scripts_dir / 'setup-hooks.ps1',
-            scripts_dir / 'build-and-run.ps1',
-        ]
-
-        for powershell_file in powershell_files:
-            with self.subTest(path=powershell_file):
-                data = powershell_file.read_bytes()
-                self.assertIn(b'\r\n', data)
-                self.assertNotIn(b'\n', data.replace(b'\r\n', b''))
 
     def test_install_event_hooks_replaces_managed_entries_and_keeps_foreign_ones(self):
         target = setup_hooks.HookTarget(

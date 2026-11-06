@@ -5,6 +5,8 @@ VERSION_CURRENT := $(shell cat VERSION 2>/dev/null || echo 0.0.0)
 APP := desktop/cross-platform
 TAURI := $(APP)/src-tauri
 MANIFEST := $(TAURI)/Cargo.toml
+# WebM source (read-only reference clone); override with FISH_DIR=...
+FISH_DIR ?= big-blue-fish-desktop-pet/code/BigBlueFish.Windows/assets/fish
 
 .PHONY: help
 help: ## Show this menu
@@ -29,6 +31,7 @@ run: ## Run the pet in dev mode
 test: ## Rust tests (AC config tests + unit tests) and hook tests
 	cargo test --locked --manifest-path $(MANIFEST)
 	cd $(APP) && npm test --silent
+	python3 -m unittest tools/test_convert_assets.py
 
 .PHONY: ac-map
 ac-map: ## Traceability gate: every requirement -> AC -> >=2 tests
@@ -55,7 +58,7 @@ check: fmt-check clippy lint-frontend ac-map test version-check ## Everything CI
 
 .PHONY: convert-assets
 convert-assets: ## (0.2.0) WebM -> frames; needs ffmpeg + Pillow
-	python3 tools/convert-assets.py --input assets/webm --output assets/big-blue-fish
+	python3 tools/convert-assets.py --input $(FISH_DIR) --output assets/big-blue-fish
 
 .PHONY: clean
 clean: ## Remove cargo build artifacts

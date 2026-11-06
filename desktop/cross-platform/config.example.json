@@ -9,10 +9,10 @@
   "renderer": {
     "scale": 0.6,
     "fps": 10,
-    "_frame_timing_comment": "逐帧停留 tick 数（单位为 fps tick）。idle：第 0/1/2/4/5 帧睁眼，第 3 帧眨眼；合计 35 tick = 在 10fps 下 3.5s。",
+    "_frame_timing_comment": "Per-frame hold in ticks (fps ticks). Big Blue Fish idle is 8 frames, 3 ticks each = 2.4s breathing loop at 10fps.",
     "frame_timing": {
       "default": { "holds": [1] },
-      "idle": { "holds": [10, 4, 4, 1, 4, 12] }
+      "idle": { "holds": [3, 3, 3, 3, 3, 3, 3, 3] }
     },
     "_stale_timeout_sec_comment": "会话文件保持不变多久（秒）后被视为已死。1h 覆盖读取/思考/长时间工具调用；崩溃的进程在此 TTL 后被清理。",
     "stale_timeout_sec": 3600,

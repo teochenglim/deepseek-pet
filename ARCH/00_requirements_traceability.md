@@ -20,6 +20,6 @@ Every requirement is cited by at least one AC in `RELEASE/vX.Y.Z.md` (`make ac-m
 ## PRD corrections found while scaffolding
 
 - Renderer format: `coding-agent-pet` loads `frames/<state>/NN.png` + `frames-manifest.json` (see `desktop/cross-platform/src/animator.js`), not a 1536x1872 sprite sheet. R-C1 targets that format.
-- Asset count: 212 `.webm` files (PRD said 106), under `code/BigBlueFish.Windows/assets/fish/`.
+- Asset count: 106 `.webm` files (plus 106 `.mask` files), as the PRD said, under `code/BigBlueFish.Windows/assets/fish/`.
 - Asset licence: Apache-2.0 (PRD said MIT). Code skeleton: MIT per its README.
 - Hook channel in the copied code is a Unix socket (`/tmp/kotori-pet.sock`, `config.rs`); PRD's TCP 17361 must be re-verified in 0.1.0 before documenting hooks.

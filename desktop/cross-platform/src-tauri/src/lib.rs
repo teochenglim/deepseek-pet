@@ -90,9 +90,9 @@ pub fn run() {
             // 1. 加载配置
             let config = PetConfig::load();
 
-            // 2. 从 Dock 隐藏（macOS accessory 模式）
+            // 2. Regular app: Big Blue Fish icon in the Dock and Cmd+Tab, plus the menu-bar icon below
             #[cfg(target_os = "macos")]
-            app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+            app.set_activation_policy(tauri::ActivationPolicy::Regular);
 
             // 2b. 在 macOS 上让窗口真正透明
             #[cfg(target_os = "macos")]
@@ -184,9 +184,8 @@ pub fn run() {
                         "quit" => commands::shutdown(app),
                         _ => {}
                     });
-                if let Some(icon) = app.default_window_icon() {
-                    tray = tray.icon(icon.clone());
-                }
+                let icon = tauri::image::Image::from_bytes(include_bytes!("../icons/tray.png"))?;
+                tray = tray.icon(icon).icon_as_template(false);
                 tray.build(app)?;
             }
 
@@ -205,6 +204,15 @@ pub fn run() {
             commands::cursor_in_window,
             commands::js_log
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running DeepseekPet");
+        .build(tauri::generate_context!())
+        .expect("error while building DeepseekPet")
+        .run(|app, event| {
+            // Clicking the Dock icon brings back a pet hidden with "Hide for now"
+            #[cfg(target_os = "macos")]
+            if let tauri::RunEvent::Reopen { .. } = event {
+                commands::show_pet(app);
+            }
+            #[cfg(not(target_os = "macos"))]
+            let _ = (app, event);
+        });
 }

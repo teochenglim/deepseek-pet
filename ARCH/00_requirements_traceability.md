@@ -5,7 +5,7 @@ Every requirement is cited by at least one AC in `RELEASE/vX.Y.Z.md` (`make ac-m
 | ID | Requirement | Source | Release |
 |---|---|---|---|
 | R-W1 | Window is transparent and borderless on macOS | PRD G1 | 0.1.0 |
-| R-W2 | Window is always on top and absent from Dock / Cmd+Tab | PRD G1, 3.4 | 0.1.0 |
+| R-W2 | Window is always on top on every Space; app shows in the Dock and menu bar (changed from PRD: was hidden from Dock) | PRD G1, 3.4 | 0.1.0, 0.5.0 |
 | R-A1 | Pet art comes from the original Big Blue Fish WebM, not redrawn | PRD G4 | 0.1.0 |
 | R-H1 | Claude Code hook events reach the Tauri backend and drive state | PRD G2, 3.3.1 | 0.1.0, 0.3.0 |
 | R-C1 | Offline converter turns WebM into the renderer's frame format | PRD 3.2 | 0.2.0 |

@@ -1,13 +1,13 @@
 [package]
 name = "deepseek-pet"
-version = "0.4.1"
+version = "0.5.0"
 edition = "2021"
 license = "Apache-2.0"
 description = "Desktop pet driven by Claude Code and Z.ai hooks"
 repository = "https://github.com/teochenglim/deepseek-pet"
 
 [dependencies]
-tauri = { version = "2", features = ["tray-icon", "macos-private-api"] }
+tauri = { version = "2", features = ["tray-icon", "image-png", "macos-private-api"] }
 # NOTE: tauri-plugin-shell was removed — it was registered but never granted
 # any `shell:*` capability permission, and no frontend code used it (AppleScript
 # goes through `std::process::Command` in commands::run_applescript directly).

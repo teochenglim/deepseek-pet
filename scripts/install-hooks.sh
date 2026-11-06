@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Install deepseek-pet hooks for Claude Code (~/.claude/settings.json) and Z.ai ZCode (~/.zcode/cli/config.json).
+# Install deepseek-pet hooks for every supported agent found on this Mac (see desktop/cross-platform/hooks/agents.json).
 # Idempotent: repeat runs replace our entries, foreign hooks are untouched, a one-time .bak is written.
-# Extra flags pass through (--only claude|zai, --claude-settings PATH, --zcode-config PATH).
+# Extra flags pass through (--only claude-code,gemini  --home DIR  --claude-settings PATH  --zcode-config PATH).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 HOOK="$ROOT/desktop/cross-platform/hooks/pet-hook.sh"

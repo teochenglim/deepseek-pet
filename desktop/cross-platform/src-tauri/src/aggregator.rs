@@ -138,6 +138,8 @@ struct AggregatedState {
 struct Inner {
     activities: HashMap<String, AgentActivity>,
     aggregated: AggregatedState,
+    /// When set, only activity from this source (`claude-code`, `zai`, ...) drives the pet.
+    active_source: Option<String>,
 }
 
 /// 将多个并发 AI agent 的实时活动聚合为宠物渲染器使用的单一显示状态。
@@ -195,6 +197,7 @@ impl ActivityAggregator {
                     pending_permission_version: 0,
                     pending_permission_sessions: HashSet::new(),
                 },
+                active_source: None,
             }),
             sessions_dir,
             stale_timeout_sec,
@@ -206,6 +209,22 @@ impl ActivityAggregator {
     /// Ask the renderer to play a clip once. Never changes the aggregated state.
     pub fn play_clip(&self, clip_id: &str) {
         let _ = self.clip_tx.send(clip_id.to_string());
+    }
+
+    /// Make one source (or `None` = all) drive the pet. Other sources keep reporting and are
+    /// shown again as soon as they are selected, but do not affect the display meanwhile.
+    pub fn set_active_source(&self, source: Option<String>) {
+        {
+            let mut inner = self.inner.lock().unwrap();
+            inner.active_source = source;
+        }
+        self.aggregate_and_notify();
+    }
+
+    /// Whether activity from `source` currently drives the pet (clips follow the same rule).
+    pub fn is_source_active(&self, source: &str) -> bool {
+        let inner = self.inner.lock().unwrap();
+        inner.active_source.as_deref().is_none_or(|s| s == source)
     }
 
     pub fn subscribe_clips(&self) -> broadcast::Receiver<String> {
@@ -589,7 +608,13 @@ impl ActivityAggregator {
     /// 根据当前活动计算汇总后的状态变更。若显示状态确有变化则返回
     /// `Some(StateChange)`，否则返回 `None`。
     fn compute_change(inner: &mut Inner) -> Option<StateChange> {
-        if inner.activities.is_empty() {
+        let active = inner.active_source.clone();
+        let visible: Vec<(&String, &AgentActivity)> = inner
+            .activities
+            .iter()
+            .filter(|(_, a)| active.as_deref().is_none_or(|s| a.source == s))
+            .collect();
+        if visible.is_empty() {
             let changed = inner.aggregated.current_state != "idle"
                 || !inner.aggregated.current_dialogue.is_empty()
                 || !inner.aggregated.current_event.is_empty()
@@ -622,7 +647,7 @@ impl ActivityAggregator {
         let mut best: Option<&AgentActivity> = None;
         let mut best_priority = -1i32;
 
-        for s in inner.activities.values() {
+        for (_, s) in &visible {
             let priority = get_priority(&s.state);
             if priority > best_priority {
                 best_priority = priority;
@@ -635,12 +660,11 @@ impl ActivityAggregator {
             .unwrap_or_else(|| "idle".to_string());
         let new_dialogue = best.map(|s| s.dialogue.clone()).unwrap_or_default();
         let new_event = best.map(|s| s.event.clone()).unwrap_or_default();
-        let new_count = inner.activities.len();
-        let new_pending_permission_sessions: HashSet<String> = inner
-            .activities
+        let new_count = visible.len();
+        let new_pending_permission_sessions: HashSet<String> = visible
             .iter()
-            .filter(|&(_, s)| s.state == "waiting" && s.event == "PermissionRequest")
-            .map(|(id, _)| id.clone())
+            .filter(|(_, s)| s.state == "waiting" && s.event == "PermissionRequest")
+            .map(|(id, _)| (*id).clone())
             .collect();
         let new_pending_permission_count = new_pending_permission_sessions.len();
         let pending_permission_sessions_changed =
@@ -753,6 +777,59 @@ mod tests {
         fs::create_dir_all(&dir).unwrap();
         let agg = ActivityAggregator::new(dir.to_string_lossy().to_string(), 3600);
         agg.play_clip("c001"); // nobody subscribed yet: must not panic
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn ac_0_8_7_active_source_hides_the_others() {
+        let dir = temp_dir("ac087a");
+        fs::create_dir_all(&dir).unwrap();
+        let agg = ActivityAggregator::new(dir.to_string_lossy().to_string(), 3600);
+        agg.update("c", "running", "", "PreToolUse", "claude-code", false);
+        agg.update("z", "waiting", "", "PermissionRequest", "zai", false);
+        let state =
+            |a: &ActivityAggregator| a.inner.lock().unwrap().aggregated.current_state.clone();
+        assert_eq!(
+            state(&agg),
+            "waiting",
+            "all sources: the highest priority wins"
+        );
+        agg.set_active_source(Some("claude-code".into()));
+        assert_eq!(
+            state(&agg),
+            "running",
+            "zai's pending approval no longer wins"
+        );
+        assert_eq!(agg.inner.lock().unwrap().aggregated.active_count, 1);
+        agg.set_active_source(Some("zai".into()));
+        assert_eq!(state(&agg), "waiting");
+        agg.set_active_source(None);
+        assert_eq!(agg.inner.lock().unwrap().aggregated.active_count, 2);
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn ac_0_8_7_inactive_source_still_tracked_and_clips_follow_the_rule() {
+        let dir = temp_dir("ac087b");
+        fs::create_dir_all(&dir).unwrap();
+        let agg = ActivityAggregator::new(dir.to_string_lossy().to_string(), 3600);
+        agg.set_active_source(Some("claude-code".into()));
+        agg.update("z", "running", "", "PreToolUse", "zai", false);
+        assert_eq!(
+            agg.inner.lock().unwrap().aggregated.current_state,
+            "idle",
+            "a hidden source does not move the pet"
+        );
+        assert!(agg.is_source_active("claude-code"));
+        assert!(!agg.is_source_active("zai"));
+        // switching back reveals what zai is doing right now, with no new event needed
+        agg.set_active_source(Some("zai".into()));
+        assert_eq!(
+            agg.inner.lock().unwrap().aggregated.current_state,
+            "running"
+        );
+        agg.set_active_source(None);
+        assert!(agg.is_source_active("anything"));
         let _ = fs::remove_dir_all(dir);
     }
 
@@ -966,6 +1043,7 @@ mod tests {
                 pending_permission_version: 1,
                 pending_permission_sessions: HashSet::from(["permission-a".to_string()]),
             },
+            active_source: None,
         };
         inner.activities.insert(
             "permission-b".to_string(),

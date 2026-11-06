@@ -130,7 +130,10 @@ where
 
     // A mapped clip arrives only on the live socket, so it plays once (the session-file
     // watcher sees the same event again and must not replay it).
-    if let Some(clip) = json["clip"].as_str().filter(|c| !c.is_empty()) {
+    if let Some(clip) = json["clip"]
+        .as_str()
+        .filter(|c| !c.is_empty() && session_mgr.is_source_active(&source))
+    {
         session_mgr.play_clip(clip);
     }
 

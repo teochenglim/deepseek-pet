@@ -1,0 +1,195 @@
+{
+  "_comment": "Single source of truth for the coding agents the pet can listen to. Read by tools/install_hooks.py (what to write where), hooks/scripts/common.py (event normalisation) and the Rust menus (Install hooks, Map animations, Active source). events = the pet's own event names (what Map animations offers); native maps a pet event to the name this agent uses in its config, where they differ.",
+  "agents": [
+    {
+      "id": "claude-code",
+      "label": "Claude Code",
+      "format": "nested",
+      "config": "~/.claude/settings.json",
+      "detect": "~/.claude",
+      "events": [
+        "SessionStart",
+        "UserPromptSubmit",
+        "PreToolUse",
+        "PostToolUse",
+        "PermissionRequest",
+        "Notification",
+        "PreCompact",
+        "PostCompact",
+        "SubagentStop",
+        "Stop",
+        "StopFailure",
+        "SessionEnd"
+      ]
+    },
+    {
+      "id": "zai",
+      "label": "Z.ai ZCode",
+      "format": "zai",
+      "config": "~/.zcode/cli/config.json",
+      "detect": "~/.zcode",
+      "events": [
+        "SessionStart",
+        "UserPromptSubmit",
+        "PreToolUse",
+        "PostToolUse",
+        "PostToolUseFailure",
+        "PermissionRequest",
+        "Stop"
+      ]
+    },
+    {
+      "id": "codex",
+      "label": "Codex CLI",
+      "format": "nested",
+      "config": "~/.codex/hooks.json",
+      "detect": "~/.codex",
+      "note": "approve the hooks once in /hooks",
+      "events": [
+        "SessionStart",
+        "UserPromptSubmit",
+        "PreToolUse",
+        "PostToolUse",
+        "PermissionRequest",
+        "Stop"
+      ]
+    },
+    {
+      "id": "gemini",
+      "label": "Gemini CLI",
+      "format": "nested",
+      "config": "~/.gemini/settings.json",
+      "detect": "~/.gemini",
+      "events": [
+        "SessionStart",
+        "UserPromptSubmit",
+        "PreToolUse",
+        "PostToolUse",
+        "PreCompact",
+        "Notification",
+        "Stop",
+        "SessionEnd"
+      ],
+      "native": {
+        "UserPromptSubmit": "BeforeAgent",
+        "PreToolUse": "BeforeTool",
+        "PostToolUse": "AfterTool",
+        "PreCompact": "PreCompress",
+        "Stop": "AfterAgent"
+      }
+    },
+    {
+      "id": "qwen",
+      "label": "Qwen Code",
+      "format": "nested",
+      "config": "~/.qwen/settings.json",
+      "detect": "~/.qwen",
+      "note": "some versions only fire prompt and stop",
+      "events": [
+        "SessionStart",
+        "UserPromptSubmit",
+        "PreToolUse",
+        "PostToolUse",
+        "Notification",
+        "PreCompact",
+        "Stop",
+        "SessionEnd"
+      ]
+    },
+    {
+      "id": "kimi",
+      "label": "Kimi Code",
+      "format": "kimi-toml",
+      "config": "~/.kimi-code/config.toml",
+      "detect": "~/.kimi-code",
+      "events": [
+        "SessionStart",
+        "UserPromptSubmit",
+        "PreToolUse",
+        "PostToolUse",
+        "Notification",
+        "PreCompact",
+        "Stop",
+        "SessionEnd"
+      ]
+    },
+    {
+      "id": "copilot",
+      "label": "GitHub Copilot CLI",
+      "format": "copilot-file",
+      "config": "~/.copilot/hooks/deepseek-pet.json",
+      "detect": "~/.copilot",
+      "events": [
+        "SessionStart",
+        "UserPromptSubmit",
+        "PreToolUse",
+        "PostToolUse",
+        "Stop",
+        "StopFailure",
+        "SessionEnd"
+      ],
+      "native": {
+        "SessionStart": "sessionStart",
+        "UserPromptSubmit": "userPromptSubmitted",
+        "PreToolUse": "preToolUse",
+        "PostToolUse": "postToolUse",
+        "Stop": "agentStop",
+        "StopFailure": "errorOccurred",
+        "SessionEnd": "sessionEnd"
+      }
+    },
+    {
+      "id": "cursor",
+      "label": "Cursor CLI",
+      "format": "cursor-flat",
+      "config": "~/.cursor/hooks.json",
+      "detect": "~/.cursor",
+      "note": "CLI hook support is partial",
+      "events": [
+        "SessionStart",
+        "UserPromptSubmit",
+        "PreToolUse",
+        "PostToolUse",
+        "PostToolUseFailure",
+        "PreCompact",
+        "Stop",
+        "StopFailure",
+        "SessionEnd"
+      ],
+      "native": {
+        "SessionStart": "sessionStart",
+        "UserPromptSubmit": "beforeSubmitPrompt",
+        "PreToolUse": "preToolUse",
+        "PostToolUse": "postToolUse",
+        "PostToolUseFailure": "postToolUseFailure",
+        "PreCompact": "preCompact",
+        "Stop": "stop",
+        "SessionEnd": "sessionEnd"
+      }
+    },
+    {
+      "id": "opencode",
+      "label": "OpenCode",
+      "format": "opencode-plugin",
+      "config": "~/.config/opencode/plugins/deepseek-pet.ts",
+      "detect": "~/.config/opencode",
+      "events": [
+        "SessionStart",
+        "PreToolUse",
+        "PostToolUse",
+        "PermissionRequest",
+        "PreCompact",
+        "Stop",
+        "StopFailure",
+        "SessionEnd"
+      ]
+    },
+    {
+      "id": "deepseek-harness",
+      "label": "DeepSeek Harness",
+      "format": "info",
+      "note": "runs your Claude Code hooks, nothing to install",
+      "events": []
+    }
+  ]
+}

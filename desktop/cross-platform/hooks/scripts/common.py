@@ -217,6 +217,32 @@ def apply_mapping(state_info, entry):
     return info, None
 
 
+def load_agents():
+    """hooks/agents.json: the agents and the events they send. Missing or broken file means no table."""
+    try:
+        return load_json_file(Path(__file__).resolve().parent.parent / 'agents.json').get('agents', [])
+    except Exception:
+        return []
+
+
+def normalize_event(source, raw):
+    """Turn an agent's own event name into the pet's (BeforeTool -> PreToolUse, preToolUse -> PreToolUse).
+
+    Matching ignores case and underscores, so pre_tool_use and PreToolUse both work.
+    An unknown name is returned unchanged.
+    """
+    if not isinstance(raw, str) or not raw:
+        return ''
+    key = raw.replace('_', '').lower()
+    for agent in load_agents():
+        if agent.get('id') != source:
+            continue
+        for event in agent.get('events', []):
+            if key in (event.lower(), agent.get('native', {}).get(event, event).lower()):
+                return event
+    return raw
+
+
 def append_debug_log(log_path, **fields):
     if not log_path:
         return

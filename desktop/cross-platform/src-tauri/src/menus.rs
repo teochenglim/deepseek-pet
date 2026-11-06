@@ -1,8 +1,11 @@
 //! Native menus shared by the menu-bar icon and the pet's own right-click "Play animation" popup.
 //! Menu ids carry a prefix so the two sources never trigger each other's handlers:
 //! the tray uses plain ids ("show", "play:c001"), the popup uses "pop:" ("pop:play:c001").
+use crate::aggregator::ActivityAggregator;
 use crate::catalog::{self, Clip};
-use crate::mapping::{self, Choice, Mapping, MappingStore, AGENTS, MAPPABLE_STATES};
+use crate::hooks::{self, Installer, Status};
+use crate::mapping::{self, AgentDef, Choice, Mapping, MappingStore, MAPPABLE_STATES};
+use crate::settings::SettingsStore;
 use std::sync::Arc;
 use tauri::menu::{CheckMenuItem, IsMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::{AppHandle, Emitter, Manager, Wry};
@@ -31,6 +34,13 @@ pub enum Action {
         event: String,
     },
     MapReset,
+    /// Let one source drive the pet (`Some(agent id)`), or all of them (`None`).
+    Source(Option<String>),
+    /// Install (`true`) or remove (`false`) the pet's hooks in one agent.
+    Hooks {
+        agent: String,
+        install: bool,
+    },
 }
 
 /// Turn a menu id into an action, but only when it carries `prefix` ("" for the tray).
@@ -44,6 +54,23 @@ pub fn parse_action(id: &str, prefix: &str) -> Option<Action> {
         _ => {
             if let Some(wanted) = rest.strip_prefix("play:") {
                 return Some(Action::Play(wanted.to_string()));
+            }
+            if let Some(source) = rest.strip_prefix("src:") {
+                return Some(Action::Source(
+                    (source != "all").then(|| source.to_string()),
+                ));
+            }
+            if let Some(agent) = rest.strip_prefix("hooks:install:") {
+                return Some(Action::Hooks {
+                    agent: agent.to_string(),
+                    install: true,
+                });
+            }
+            if let Some(agent) = rest.strip_prefix("hooks:remove:") {
+                return Some(Action::Hooks {
+                    agent: agent.to_string(),
+                    install: false,
+                });
             }
             // map:<agent>:<event>:<kind>[:<value>]
             let mut parts = rest.strip_prefix("map:")?.splitn(4, ':');
@@ -238,17 +265,28 @@ fn event_submenu(
     Ok(sub)
 }
 
-/// "Map animations": every agent, every event it sends, current choice shown in the title.
+/// "Map animations": every installed agent, every event it sends, current choice shown in the title.
 fn map_menu(
     app: &AppHandle,
     clips: &[Clip],
     mapping: &Mapping,
     last: Option<&Clip>,
+    installed: &[&AgentDef],
 ) -> tauri::Result<Submenu<Wry>> {
     let root = Submenu::with_id(app, "map", "Map animations", true)?;
-    for (agent, label, events) in AGENTS {
-        let agent_menu = Submenu::with_id(app, format!("mapagent:{agent}"), *label, true)?;
-        for event in *events {
+    if installed.is_empty() {
+        root.append(&MenuItem::with_id(
+            app,
+            "map-none",
+            "Install hooks for an agent first",
+            false,
+            None::<&str>,
+        )?)?;
+    }
+    for def in installed {
+        let agent = def.id.as_str();
+        let agent_menu = Submenu::with_id(app, format!("mapagent:{agent}"), &def.label, true)?;
+        for event in &def.events {
             agent_menu.append(&event_submenu(
                 app,
                 agent,
@@ -271,6 +309,88 @@ fn map_menu(
     Ok(root)
 }
 
+/// First line of the menu-bar menu, so you can tell which build is running.
+pub fn version_label() -> String {
+    format!("Big Blue Fish  v{}", env!("CARGO_PKG_VERSION"))
+}
+
+/// Title of the "Active source" submenu, naming the current choice.
+pub fn source_title(active: Option<&str>) -> String {
+    let name = match active {
+        None => "all sources".to_string(),
+        Some(id) => mapping::agents()
+            .iter()
+            .find(|a| a.id == id)
+            .map_or(id.to_string(), |a| a.label.clone()),
+    };
+    format!("Active source  ({name})")
+}
+
+/// "Active source": which agent drives the pet. Only installed agents (and the current choice) are offered.
+fn source_menu(
+    app: &AppHandle,
+    installed: &[&AgentDef],
+    active: Option<&str>,
+) -> tauri::Result<Submenu<Wry>> {
+    let root = Submenu::with_id(app, "source", source_title(active), true)?;
+    root.append(&CheckMenuItem::with_id(
+        app,
+        "src:all",
+        "All sources",
+        true,
+        active.is_none(),
+        None::<&str>,
+    )?)?;
+    let mut offered: Vec<(String, String)> = installed
+        .iter()
+        .map(|a| (a.id.clone(), a.label.clone()))
+        .collect();
+    if let Some(current) = active.filter(|c| !offered.iter().any(|(id, _)| id == c)) {
+        let label = mapping::agents()
+            .iter()
+            .find(|a| a.id == current)
+            .map_or(current.to_string(), |a| a.label.clone());
+        offered.push((current.to_string(), label));
+    }
+    for (id, label) in offered {
+        root.append(&CheckMenuItem::with_id(
+            app,
+            format!("src:{id}"),
+            &label,
+            true,
+            active == Some(id.as_str()),
+            None::<&str>,
+        )?)?;
+    }
+    Ok(root)
+}
+
+/// "Install hooks": one row per agent, click to install or remove.
+fn hooks_menu(app: &AppHandle, installer_ok: bool, status: &Status) -> tauri::Result<Submenu<Wry>> {
+    let root = Submenu::with_id(app, "hooks", "Install hooks", true)?;
+    if !installer_ok {
+        root.append(&MenuItem::with_id(
+            app,
+            "hooks-needs-python",
+            "Needs the Xcode command line tools (run: xcode-select --install)",
+            false,
+            None::<&str>,
+        )?)?;
+        return Ok(root);
+    }
+    for row in hooks::install_rows(mapping::agents(), status) {
+        let kind = if row.installed { "remove" } else { "install" };
+        root.append(&MenuItem::with_id(
+            app,
+            format!("hooks:{kind}:{}", row.id),
+            &row.text,
+            row.enabled,
+            None::<&str>,
+        )?)?;
+    }
+    Ok(root)
+}
+
 /// The menu-bar icon's menu. Rebuilt after every mapping change so the check marks stay right.
 pub fn build_tray_menu(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
     let started = std::time::Instant::now();
@@ -282,6 +402,7 @@ pub fn build_tray_menu(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
         .as_deref()
         .and_then(|id| clips.iter().find(|c| c.id == id));
 
+    let version = MenuItem::with_id(app, "version", version_label(), false, None::<&str>)?;
     let show = MenuItem::with_id(app, "show", "Show Big Blue Fish", true, None::<&str>)?;
     let play = Submenu::with_id(app, "play", "Play animation", !clips.is_empty())?;
     let (random, categories) = play_entries(app, &clips, "")?;
@@ -291,9 +412,34 @@ pub fn build_tray_menu(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
         .map(|c| c as &dyn IsMenuItem<Wry>)
         .collect();
     play.append_items(&items)?;
-    let map = map_menu(app, &clips, &mapping, last)?;
+    let installer = Installer::locate().filter(|i| hooks::python_ready(&i.python));
+    let status = installer
+        .as_ref()
+        .map(Installer::status)
+        .unwrap_or_default();
+    let installed = hooks::installed_agents(mapping::agents(), &status);
+    let active = app
+        .try_state::<SettingsStore>()
+        .and_then(|s| s.0.lock().ok().and_then(|g| g.active_source.clone()));
+    let map = map_menu(app, &clips, &mapping, last, &installed)?;
+    let source = source_menu(app, &installed, active.as_deref())?;
+    let install = hooks_menu(app, installer.is_some(), &status)?;
     let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-    let menu = Menu::with_items(app, &[&show, &play, &map, &quit])?;
+    let menu = Menu::with_items(
+        app,
+        &[
+            &version,
+            &PredefinedMenuItem::separator(app)?,
+            &show,
+            &play,
+            &map,
+            &PredefinedMenuItem::separator(app)?,
+            &source,
+            &install,
+            &PredefinedMenuItem::separator(app)?,
+            &quit,
+        ],
+    )?;
     tracing::info!(
         "menu-bar menu built in {} ms",
         started.elapsed().as_millis()
@@ -407,6 +553,37 @@ pub fn run(app: &AppHandle, action: Action) {
                 );
             }
         }
+        Action::Source(source) => {
+            if let Some(agg) = app.try_state::<Arc<ActivityAggregator>>() {
+                agg.set_active_source(source.clone());
+            }
+            if let Some(store) = app.try_state::<SettingsStore>() {
+                if let Ok(mut settings) = store.0.lock() {
+                    settings.active_source = source;
+                    if let Err(e) =
+                        settings.save(&crate::home::user_home_dir().join("settings.json"))
+                    {
+                        tracing::warn!("Cannot save settings: {e}");
+                    }
+                }
+            }
+            refresh_tray(app);
+        }
+        Action::Hooks { agent, install } => {
+            // blocking and short (it rewrites one small config file); the menu is rebuilt after
+            match Installer::locate() {
+                Some(installer) => {
+                    if let Err(e) = installer.set_installed(&agent, install) {
+                        tracing::warn!(
+                            "Cannot {} hooks for {agent}: {e}",
+                            if install { "install" } else { "remove" }
+                        );
+                    }
+                }
+                None => tracing::warn!("Hook installer not found"),
+            }
+            refresh_tray(app);
+        }
         Action::MapReset => {
             if let Some(store) = app.try_state::<MappingStore>() {
                 if let Ok(mut m) = store.mapping.lock() {
@@ -478,30 +655,66 @@ mod tests {
 
     #[test]
     fn ac_0_7_4_agent_event_tables_match_installer() {
-        // the events the menu offers must be the ones the installer registers
-        let py = std::fs::read_to_string(
-            std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-                .join("../../../tools/install_hooks.py"),
+        // the menu and the installer read one file, so the 0.7.0 agents keep their events
+        let claude = mapping::agents()
+            .iter()
+            .find(|a| a.id == "claude-code")
+            .unwrap();
+        for event in ["Stop", "PreToolUse", "PermissionRequest", "SessionEnd"] {
+            assert!(claude.events.iter().any(|e| e == event), "{event}");
+        }
+        let zai = mapping::agents().iter().find(|a| a.id == "zai").unwrap();
+        assert!(zai.events.iter().any(|e| e == "PostToolUseFailure"));
+        let table = std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../hooks/agents.json"),
         )
         .unwrap();
-        for (agent, _, events) in AGENTS {
-            let list = if *agent == "claude-code" {
-                "CLAUDE_EVENTS"
-            } else {
-                "ZAI_EVENTS"
-            };
-            let block = py
-                .split(list)
-                .nth(1)
-                .and_then(|r| r.split(']').next())
-                .unwrap();
-            for event in *events {
-                assert!(
-                    block.contains(&format!("\"{event}\"")),
-                    "{agent}: {event} not in {list}"
-                );
-            }
+        let ids: Vec<&str> = mapping::agents().iter().map(|a| a.id.as_str()).collect();
+        for id in ids {
+            assert!(table.contains(&format!("\"id\": \"{id}\"")));
         }
+    }
+
+    #[test]
+    fn ac_0_8_9_menu_shows_version() {
+        let label = version_label();
+        assert!(label.ends_with(env!("CARGO_PKG_VERSION")), "{label}");
+        assert!(label.contains(" v"));
+    }
+
+    #[test]
+    fn ac_0_8_9_source_title_names_current_choice() {
+        assert_eq!(source_title(None), "Active source  (all sources)");
+        assert_eq!(
+            source_title(Some("claude-code")),
+            "Active source  (Claude Code)"
+        );
+        assert_eq!(source_title(Some("zai")), "Active source  (Z.ai ZCode)");
+    }
+
+    #[test]
+    fn ac_0_8_7_source_and_hook_menu_ids_parse() {
+        assert_eq!(parse_action("src:all", ""), Some(Action::Source(None)));
+        assert_eq!(
+            parse_action("src:claude-code", ""),
+            Some(Action::Source(Some("claude-code".into())))
+        );
+        assert_eq!(
+            parse_action("hooks:install:gemini", ""),
+            Some(Action::Hooks {
+                agent: "gemini".into(),
+                install: true
+            })
+        );
+        assert_eq!(
+            parse_action("hooks:remove:gemini", ""),
+            Some(Action::Hooks {
+                agent: "gemini".into(),
+                install: false
+            })
+        );
+        // the popup never handles these
+        assert_eq!(parse_action("src:all", POPUP_PREFIX), None);
     }
 
     #[test]

@@ -96,8 +96,38 @@ pub fn ensure_user_home(home: &Path, resources: &Path) -> io::Result<()> {
         let text = serde_json::to_string_pretty(&value)
             .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
         fs::write(&config_path, text + "\n")?;
+    } else {
+        upgrade_state_map(&config_path, &resources.join("config.example.json"))?;
     }
     Ok(())
+}
+
+/// Config written by an older release keeps its own `state_map`, so better default animations
+/// would never reach it. A config below the bundled `config_version` gets the bundled `state_map`
+/// once (everything else in it is kept, and the old file is saved as `config.json.bak`).
+/// Per-event choices made in the menu live in `mapping.json` and are not touched.
+fn upgrade_state_map(config_path: &Path, bundled: &Path) -> io::Result<()> {
+    let bad = |e| io::Error::new(io::ErrorKind::InvalidData, e);
+    let Ok(bundled_text) = fs::read_to_string(bundled) else {
+        return Ok(());
+    };
+    let default: serde_json::Value = serde_json::from_str(&bundled_text).map_err(bad)?;
+    let want = default["config_version"].as_u64().unwrap_or(0);
+    let current_text = fs::read_to_string(config_path)?;
+    let Ok(mut current) = serde_json::from_str::<serde_json::Value>(&current_text) else {
+        return Ok(()); // a hand-edited file that does not parse is left alone
+    };
+    if current["config_version"].as_u64().unwrap_or(0) >= want {
+        return Ok(());
+    }
+    let bak = config_path.with_extension("json.bak");
+    if !bak.exists() {
+        fs::write(&bak, &current_text)?;
+    }
+    current["state_map"] = default["state_map"].clone();
+    current["config_version"] = serde_json::Value::from(want);
+    let text = serde_json::to_string_pretty(&current).map_err(bad)?;
+    fs::write(config_path, text + "\n")
 }
 
 #[cfg(test)]
@@ -125,6 +155,55 @@ mod tests {
         )
         .unwrap();
         res
+    }
+
+    #[test]
+    fn ac_0_8_8_old_config_gets_new_default_animations() {
+        let root = temp("upgrade");
+        let res = fake_resources(&root, "#!/bin/sh\n");
+        fs::write(
+            res.join("config.example.json"),
+            r#"{"config_version":2,"state_map":{"PreCompact":{"state":"review"}}}"#,
+        )
+        .unwrap();
+        let home = root.join("home");
+        fs::create_dir_all(&home).unwrap();
+        fs::write(
+            home.join("config.json"),
+            r#"{"pet_id":"mine","state_map":{"PreCompact":{"state":"waiting"}}}"#,
+        )
+        .unwrap();
+        ensure_user_home(&home, &res).unwrap();
+        let v: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(home.join("config.json")).unwrap()).unwrap();
+        assert_eq!(v["state_map"]["PreCompact"]["state"], "review");
+        assert_eq!(v["pet_id"], "mine", "other settings are kept");
+        assert!(home.join("config.json.bak").exists());
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn ac_0_8_8_current_config_is_left_alone() {
+        let root = temp("upgrade-noop");
+        let res = fake_resources(&root, "#!/bin/sh\n");
+        fs::write(
+            res.join("config.example.json"),
+            r#"{"config_version":2,"state_map":{"Stop":{"state":"jumping"}}}"#,
+        )
+        .unwrap();
+        let home = root.join("home");
+        fs::create_dir_all(&home).unwrap();
+        let mine = r#"{"config_version":2,"state_map":{"Stop":{"state":"waving"}}}"#;
+        fs::write(home.join("config.json"), mine).unwrap();
+        ensure_user_home(&home, &res).unwrap();
+        assert_eq!(fs::read_to_string(home.join("config.json")).unwrap(), mine);
+        fs::write(home.join("config.json"), "{not json").unwrap();
+        ensure_user_home(&home, &res).unwrap();
+        assert_eq!(
+            fs::read_to_string(home.join("config.json")).unwrap(),
+            "{not json"
+        );
+        let _ = fs::remove_dir_all(root);
     }
 
     #[test]

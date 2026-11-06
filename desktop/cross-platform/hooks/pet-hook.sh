@@ -8,7 +8,8 @@ PYTHON_BIN="${KOTORI_PET_PYTHON:-/usr/bin/python3}"
 
 run_hook() {
     local script_name="$1"
-    "$PYTHON_BIN" "$SCRIPT_DIR/scripts/$script_name" || true
+    shift
+    "$PYTHON_BIN" "$SCRIPT_DIR/scripts/$script_name" "$@" || true
 }
 
 case "$SOURCE" in
@@ -20,6 +21,10 @@ case "$SOURCE" in
         ;;
     zai)
         run_hook "zai_hook.py"
+        ;;
+    gemini|qwen|kimi|copilot|cursor)
+        # Copilot and Cursor pass their event name as the second argument
+        run_hook "generic_hook.py" "$SOURCE" "${2:-}"
         ;;
     *)
         echo "Unsupported hook source: $SOURCE" >&2

@@ -64,7 +64,8 @@ fn ac_0_7_4_map_menu_lists_events_per_agent() {
     ] {
         assert!(menus.contains(needle), "menus.rs lacks {needle}");
     }
-    let mapping = fs::read_to_string(src.join("mapping.rs")).unwrap();
+    // since 0.8.0 the agent and event table is hooks/agents.json
+    let mapping = fs::read_to_string(app().join("hooks/agents.json")).unwrap();
     for event in [
         "PreToolUse",
         "StopFailure",

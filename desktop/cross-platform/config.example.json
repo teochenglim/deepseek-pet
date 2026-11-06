@@ -1,4 +1,5 @@
 {
+  "config_version": 2,
   "_comment": "将此文件复制为 config.json 后按需自定义。值为 null 的字段会被自动检测。",
   "pet_id": "big-blue-fish",
   "pet_base_dir": null,
@@ -47,8 +48,8 @@
       "dialogue": "Hi!"
     },
     "UserPromptSubmit": {
-      "state": "running",
-      "dialogue": "On it!"
+      "state": "review",
+      "dialogue": "Thinking..."
     },
     "PreToolUse": {
       "state": "running",
@@ -71,12 +72,16 @@
       "dialogue": "Needs your approval"
     },
     "SubagentStop": {
-      "state": "idle",
-      "dialogue": ""
+      "state": "running",
+      "dialogue": "Working..."
     },
     "PreCompact": {
-      "state": "waiting",
+      "state": "review",
       "dialogue": "Tidying memory..."
+    },
+    "PostCompact": {
+      "state": "running",
+      "dialogue": "Back to work"
     },
     "SessionEnd": {
       "state": "waving",

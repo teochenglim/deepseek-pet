@@ -388,3 +388,71 @@ class MappingTests(unittest.TestCase):
             saved = json.loads((sessions / 's1.json').read_text())
             self.assertEqual(saved['clip'], 'c007')
             self.assertEqual(saved['state'], 'idle')
+
+
+class NormaliseTests(unittest.TestCase):
+    """Each agent's own event names and payload become the pet's events (agents.json)."""
+
+    def test_ac_0_8_4_gemini_event_names_normalised(self):
+        from common import normalize_event
+        for raw, want in (('BeforeTool', 'PreToolUse'), ('AfterTool', 'PostToolUse'),
+                          ('BeforeAgent', 'UserPromptSubmit'), ('AfterAgent', 'Stop'),
+                          ('PreCompress', 'PreCompact'), ('SessionStart', 'SessionStart')):
+            self.assertEqual(normalize_event('gemini', raw), want, raw)
+        self.assertEqual(normalize_event('gemini', 'SomethingNew'), 'SomethingNew', 'unknown names pass through')
+        self.assertEqual(normalize_event('gemini', ''), '')
+
+    def test_ac_0_8_4_copilot_camelcase_payload_normalised(self):
+        import generic_hook
+        from common import normalize_event
+        for raw, want in (('sessionStart', 'SessionStart'), ('userPromptSubmitted', 'UserPromptSubmit'),
+                          ('preToolUse', 'PreToolUse'), ('postToolUse', 'PostToolUse'),
+                          ('agentStop', 'Stop'), ('errorOccurred', 'StopFailure'), ('sessionEnd', 'SessionEnd')):
+            self.assertEqual(normalize_event('copilot', raw), want, raw)
+        # Copilot's payload has no event name: it arrives as the command's argument; toolName is camelCase
+        self.assertEqual(generic_hook.pick_event('copilot', {'toolName': 'bash'}, 'preToolUse'), 'PreToolUse')
+        a = generic_hook.session_id_for('copilot', {}, '/work/a')
+        self.assertEqual(a, generic_hook.session_id_for('copilot', {}, '/work/a'), 'stable per folder')
+        self.assertNotEqual(a, generic_hook.session_id_for('copilot', {}, '/work/b'))
+
+    def test_ac_0_8_4_cursor_stop_status_normalised(self):
+        import generic_hook
+        self.assertEqual(generic_hook.pick_event('cursor', {'hook_event_name': 'stop', 'status': 'completed'}, ''), 'Stop')
+        self.assertEqual(generic_hook.pick_event('cursor', {'hook_event_name': 'stop', 'status': 'error'}, ''), 'StopFailure')
+        self.assertEqual(generic_hook.pick_event('cursor', {'hook_event_name': 'beforeSubmitPrompt'}, ''), 'UserPromptSubmit')
+
+    def test_ac_0_8_4_every_listed_agent_has_known_events(self):
+        from common import load_agents, normalize_event
+        agents = load_agents()
+        self.assertGreaterEqual(len(agents), 10)
+        for agent in agents:
+            for event in agent['events']:
+                native = agent.get('native', {}).get(event, event)
+                self.assertEqual(normalize_event(agent['id'], native), event, (agent['id'], event))
+
+
+class DefaultAnimationTests(unittest.TestCase):
+    """Out of the box the pet should show what the agent is doing (0.8.0 defaults)."""
+
+    def setUp(self):
+        cfg = json.loads((SCRIPT_DIR.parent.parent / 'config.example.json').read_text())
+        self.state_map = cfg['state_map']
+
+    def state(self, event):
+        return common.resolve_state(event, self.state_map)['state']
+
+    def test_ac_0_8_8_compact_shows_thinking_then_work(self):
+        self.assertEqual(self.state('PreCompact'), 'review', 'compacting is thinking, not waiting for the user')
+        self.assertEqual(self.state('PostCompact'), 'running')
+
+    def test_ac_0_8_8_prompt_is_thinking_tools_are_working(self):
+        self.assertEqual(self.state('UserPromptSubmit'), 'review')
+        self.assertEqual(self.state('PreToolUse'), 'running')
+        self.assertEqual(self.state('PostToolUse'), 'running')
+
+    def test_ac_0_8_8_subagent_stop_does_not_idle_a_busy_agent(self):
+        self.assertEqual(self.state('SubagentStop'), 'running')
+
+    def test_ac_0_8_8_only_the_user_blocks_with_waiting(self):
+        waiting = sorted(e for e, v in self.state_map.items() if v['state'] == 'waiting')
+        self.assertEqual(waiting, ['PermissionRequest', 'QuestionAsked'])

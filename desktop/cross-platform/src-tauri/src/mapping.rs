@@ -9,42 +9,41 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::io;
 use std::path::Path;
-use std::sync::Mutex;
+use std::sync::{Mutex, OnceLock};
 
-/// Agents that can be mapped, with the events each one sends (kept in line with
-/// `tools/install_hooks.py`; a test checks that).
-pub const AGENTS: &[(&str, &str, &[&str])] = &[
-    (
-        "claude-code",
-        "Claude Code",
-        &[
-            "SessionStart",
-            "UserPromptSubmit",
-            "PreToolUse",
-            "PostToolUse",
-            "PermissionRequest",
-            "Notification",
-            "PreCompact",
-            "SubagentStop",
-            "Stop",
-            "StopFailure",
-            "SessionEnd",
-        ],
-    ),
-    (
-        "zai",
-        "Z.ai ZCode",
-        &[
-            "SessionStart",
-            "UserPromptSubmit",
-            "PreToolUse",
-            "PermissionRequest",
-            "PostToolUse",
-            "PostToolUseFailure",
-            "Stop",
-        ],
-    ),
-];
+/// One coding agent from `hooks/agents.json`, the file the installer and the hook scripts read too.
+#[derive(Debug, Clone, Deserialize)]
+pub struct AgentDef {
+    pub id: String,
+    pub label: String,
+    /// How the installer writes its hooks; `info` means there is nothing to install.
+    pub format: String,
+    #[serde(default)]
+    pub note: Option<String>,
+    /// The pet's event names this agent can send (what "Map animations" offers).
+    #[serde(default)]
+    pub events: Vec<String>,
+}
+
+impl AgentDef {
+    pub fn installable(&self) -> bool {
+        self.format != "info"
+    }
+}
+
+/// Every supported agent, in menu order. An unreadable table gives an empty list, never a panic.
+pub fn agents() -> &'static [AgentDef] {
+    static AGENTS: OnceLock<Vec<AgentDef>> = OnceLock::new();
+    AGENTS.get_or_init(|| {
+        #[derive(Deserialize)]
+        struct File {
+            agents: Vec<AgentDef>,
+        }
+        serde_json::from_str::<File>(include_str!("../../hooks/agents.json"))
+            .map(|f| f.agents)
+            .unwrap_or_default()
+    })
+}
 
 /// States a hook event can switch the pet to (the drag-only run states are left out).
 pub const MAPPABLE_STATES: &[(&str, &str)] = &[

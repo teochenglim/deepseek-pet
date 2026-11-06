@@ -7,8 +7,10 @@ mod catalog;
 mod commands;
 mod config;
 mod home;
+mod hooks;
 mod mapping;
 mod menus;
+mod settings;
 mod watcher;
 
 use aggregator::ActivityAggregator;
@@ -172,6 +174,9 @@ pub fn run() {
             app.manage(menus::PlayCatalog(Arc::new(catalog::load(
                 &config.frames_dir,
             ))));
+            let saved = settings::Settings::load(&home::user_home_dir().join("settings.json"));
+            session_mgr.set_active_source(saved.active_source.clone());
+            app.manage(settings::SettingsStore(std::sync::Mutex::new(saved)));
             app.manage(mapping::MappingStore::new(mapping::Mapping::load(
                 &home::user_home_dir().join("mapping.json"),
             )));

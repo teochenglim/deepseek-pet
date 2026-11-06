@@ -35,6 +35,7 @@ fn install(d: &Path, action: &str) {
         .arg(root().join("tools/install_hooks.py"))
         .arg(action)
         .args(["--hook-script", hook.to_str().unwrap()])
+        .args(["--only", "claude-code,zai"])
         .args([
             "--claude-settings",
             d.join("claude/settings.json").to_str().unwrap(),
@@ -51,7 +52,8 @@ fn install(d: &Path, action: &str) {
 #[test]
 fn ac_0_3_1_event_map_running() {
     assert_eq!(state_of("PreToolUse"), "running");
-    assert_eq!(state_of("UserPromptSubmit"), "running");
+    // since 0.8.0 the prompt itself is "thinking" (review); the tools that follow are "running"
+    assert_eq!(state_of("UserPromptSubmit"), "review");
 }
 #[test]
 fn ac_0_3_1_event_map_failed() {

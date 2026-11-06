@@ -1,0 +1,2 @@
+# Needed by tools/convert-assets.py and its tests (CI installs this; locally Pillow is usually present)
+pillow==11.3.0

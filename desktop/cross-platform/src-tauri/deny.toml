@@ -2,10 +2,24 @@
 
 [graph]
 all-features = false
+# macOS-only app: skip the Linux/Windows-only trees (gtk3, webkit2gtk, windows-*) that Tauri lists in Cargo.lock
+targets = ["aarch64-apple-darwin", "x86_64-apple-darwin"]
 
 [advisories]
 version = 2
 yanked = "deny"
+# Each ignore is a transitive dependency of tauri that we cannot upgrade; revisit on every tauri bump.
+ignore = [
+  # quick-xml 0.39 via plist (tauri build/runtime): parses only the app's own Info.plist, not untrusted XML.
+  "RUSTSEC-2026-0194",
+  "RUSTSEC-2026-0195",
+  # unic-* via urlpattern in tauri-utils: unmaintained, no vulnerability, no replacement path from our side.
+  "RUSTSEC-2025-0075",
+  "RUSTSEC-2025-0080",
+  "RUSTSEC-2025-0081",
+  "RUSTSEC-2025-0098",
+  "RUSTSEC-2025-0100",
+]
 
 [licenses]
 version = 2

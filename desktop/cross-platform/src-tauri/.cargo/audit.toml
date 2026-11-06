@@ -1,0 +1,12 @@
+# Mirror of the ignores in src-tauri/deny.toml. All are transitive dependencies of tauri.
+[advisories]
+ignore = [
+  "RUSTSEC-2026-0194", # quick-xml via plist: parses our own Info.plist only
+  "RUSTSEC-2026-0195", # quick-xml via plist
+  "RUSTSEC-2025-0075", # unic-char-range via urlpattern (unmaintained)
+  "RUSTSEC-2025-0080", # unic-common
+  "RUSTSEC-2025-0081", # unic-char-property
+  "RUSTSEC-2025-0098", # unic-ucd-version
+  "RUSTSEC-2025-0100", # unic-ucd-ident
+  "RUSTSEC-2024-0370", # proc-macro-error via gtk3 (Linux only, never built on macOS)
+]

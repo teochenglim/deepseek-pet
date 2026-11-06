@@ -24,7 +24,8 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           workspaces: desktop/cross-platform/src-tauri
-      - run: make setup && make check
+      # `make check` is run locally before `make release`; CI only builds and publishes.
+      - run: make setup
       - run: make build
       - name: Package
         run: |

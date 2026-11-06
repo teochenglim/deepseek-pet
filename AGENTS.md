@@ -5,7 +5,7 @@ macOS desktop pet. Tauri v2 (Rust + system WebView, plain HTML/JS, no bundler) f
 ## Where things stand
 
 - Built: v0.1.0 code done and `make check` green; .app and .dmg build. Awaiting the human visual pass (see Limits in RELEASE/v0.1.0.md). 0.2.0-1.0.0 planned. Status table: [RELEASE.md](RELEASE.md).
-- Next: finish v0.4.0 (see RELEASE/v0.4.0.md), then 1.0.0.
+- Next: v0.4.1 (CI fixes, see RELEASE/v0.4.1.md), then 1.0.0.
 - Reference clones `coding-agent-pet/` and `big-blue-fish-desktop-pet/` are git-ignored read-only references. Never edit them; copy what is needed into `desktop/cross-platform/`, `assets/`.
 
 Code map:
@@ -56,3 +56,6 @@ Read the release file first. Probe the real thing (run hook, read socket) before
 - Do not put destructive shell strings (even inside heredocs) in Bash commands; the harness blocks them. Write such files with the editor tool.
 - ZCode (Z.ai) is a separate agent with Claude-compatible hook payloads; its config is `~/.zcode/cli/config.json` and project-level hooks are ignored by ZCode. Failure event is `PostToolUseFailure`. Never run the installer against the real `~/.claude` or `~/.zcode` in tests; use `--claude-settings/--zcode-config` temp paths.
 - `terminal_events` deletes the session, so never list an event there whose state should stay visible (StopFailure was, and hid `failed`).
+- CI is deliberately small: `security.yml` (Semgrep, Trivy, cargo-deny, daily) and `release.yml` (tag build and publish). `make check` and `make audit` run locally before `make release`; the release job does not re-run them. Do not re-add Dependabot or a macOS CI job without asking.
+- `src-tauri/deny.toml` ignores and `src-tauri/.cargo/audit.toml` must stay in sync; each ignored advisory is a transitive tauri dependency, recheck on every tauri bump.
+- `cargo-deny` needs `license` in `Cargo.toml`; macOS-only `targets` in `deny.toml` hide the gtk/webkit2gtk trees.

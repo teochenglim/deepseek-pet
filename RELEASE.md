@@ -18,6 +18,7 @@ macOS desktop pet: Tauri v2 shell forked from coding-agent-pet, Big Blue Fish an
 | Release | Theme | Status | Requirements |
 |---|---|---|---|
 | [v1.0.0](RELEASE/v1.0.0.md) | Stable release | planned | R-P1, R-D1, R-M1 |
+| [v0.8.1](RELEASE/v0.8.1.md) | Semgrep gate fix | active | R-D1 |
 | [v0.8.0](RELEASE/v0.8.0.md) | More agents, one active source, better default animations | active | R-K2, R-K1 |
 | [v0.7.0](RELEASE/v0.7.0.md) | Map animations to hook events | active | R-K1 |
 | [v0.6.1](RELEASE/v0.6.1.md) | Standalone app | active | R-D1 |

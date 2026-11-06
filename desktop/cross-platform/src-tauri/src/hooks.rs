@@ -118,8 +118,10 @@ impl Installer {
     }
 
     fn run(&self, action: &str, only: Option<&str>) -> io::Result<String> {
-        let mut cmd = Command::new(&self.python);
-        cmd.arg(&self.script)
+        // the program is a literal; the interpreter is data passed to `env` (KOTORI_PET_PYTHON may name it)
+        let mut cmd = Command::new("/usr/bin/env");
+        cmd.arg(&self.python)
+            .arg(&self.script)
             .arg(action)
             .arg("--hook-script")
             .arg(&self.hook);

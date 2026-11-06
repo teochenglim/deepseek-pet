@@ -2,6 +2,8 @@
 
 import json
 import os
+import random
+import time
 import socket
 import sys
 import urllib.parse
@@ -217,6 +219,33 @@ def apply_mapping(state_info, entry):
     return info, None
 
 
+CLIP_GAP_SEC = 12  # a default clip lasts about 10 s; a faster event stream must not restart it
+
+
+def pick_default_clip(entry, stamp_path, now=None, rng=random):
+    """A random clip from the event's default pool (`clips` in config.json `state_map`), or None.
+
+    Fires at most once per CLIP_GAP_SEC (stamp file mtime), so a burst of tool calls plays one clip
+    and then settles on the working state instead of restarting a new clip every call.
+    """
+    pool = entry.get('clips') if isinstance(entry, dict) else None
+    ids = [c.strip() for c in pool if isinstance(c, str) and c.strip()] if isinstance(pool, list) else []
+    if not ids:
+        return None
+    now = time.time() if now is None else now
+    try:
+        if now - os.path.getmtime(stamp_path) < CLIP_GAP_SEC:
+            return None
+    except OSError:
+        pass
+    try:
+        Path(stamp_path).touch()
+        os.utime(stamp_path, (now, now))
+    except OSError:
+        return None
+    return rng.choice(ids)
+
+
 def load_agents():
     """hooks/agents.json: the agents and the events they send. Missing or broken file means no table."""
     try:
@@ -289,7 +318,11 @@ def process_event(platform_dir, source, hook_event, session_id, tool_name,
     state_info = resolve_state(hook_event, state_map)
     agent_map = load_mapping().get(source)
     entry = agent_map.get(hook_event) if isinstance(agent_map, dict) else None
+    default_pool = state_info
     state_info, clip = apply_mapping(state_info, entry)
+    if clip is None and not isinstance(entry, dict):
+        # no menu choice for this event: the default pool (varied work animations) applies
+        clip = pick_default_clip(default_pool, os.path.join(os.path.dirname(sessions_dir), '.last-default-clip'))
     pet_state = state_info.get('state', 'idle')
     dialogue = state_info.get('dialogue', '')
 

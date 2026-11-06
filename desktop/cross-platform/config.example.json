@@ -1,5 +1,5 @@
 {
-  "config_version": 2,
+  "config_version": 3,
   "_comment": "将此文件复制为 config.json 后按需自定义。值为 null 的字段会被自动检测。",
   "pet_id": "big-blue-fish",
   "pet_base_dir": null,
@@ -49,11 +49,13 @@
     },
     "UserPromptSubmit": {
       "state": "review",
-      "dialogue": "Thinking..."
+      "dialogue": "Thinking...",
+      "clips": ["c055", "c076"]
     },
     "PreToolUse": {
       "state": "running",
-      "dialogue": "Working..."
+      "dialogue": "Working...",
+      "clips": ["c013", "c054", "c056", "c104", "c027"]
     },
     "Stop": {
       "state": "jumping",
@@ -73,15 +75,18 @@
     },
     "SubagentStop": {
       "state": "running",
-      "dialogue": "Working..."
+      "dialogue": "Working...",
+      "clips": ["c013", "c054", "c056", "c104", "c027"]
     },
     "PreCompact": {
       "state": "review",
-      "dialogue": "Tidying memory..."
+      "dialogue": "Tidying memory...",
+      "clips": ["c055", "c076"]
     },
     "PostCompact": {
       "state": "running",
-      "dialogue": "Back to work"
+      "dialogue": "Back to work",
+      "clips": ["c013", "c054", "c056", "c104", "c027"]
     },
     "SessionEnd": {
       "state": "waving",

@@ -349,6 +349,25 @@ class MappingTests(unittest.TestCase):
             self.assertEqual(load_mapping(path), {})
             self.assertEqual(load_mapping(Path(d) / 'missing.json'), {})
 
+    def test_ac_0_8_9_default_pool_picks_a_clip_then_waits(self):
+        import common
+        import random
+        with tempfile.TemporaryDirectory() as d:
+            stamp = os.path.join(d, '.last')
+            entry = {'state': 'running', 'clips': ['c013', 'c054', ' ']}
+            first = common.pick_default_clip(entry, stamp, now=1000.0, rng=random.Random(1))
+            self.assertIn(first, ('c013', 'c054'))
+            # a burst of tool calls must not restart the clip
+            self.assertIsNone(common.pick_default_clip(entry, stamp, now=1005.0))
+            self.assertIsNotNone(common.pick_default_clip(entry, stamp, now=1000.0 + common.CLIP_GAP_SEC + 1))
+
+    def test_ac_0_8_9_no_pool_means_no_clip(self):
+        import common
+        with tempfile.TemporaryDirectory() as d:
+            stamp = os.path.join(d, '.last')
+            for entry in (None, {}, {'clips': []}, {'clips': 'c013'}, {'clips': [1, None]}, 'junk'):
+                self.assertIsNone(common.pick_default_clip(entry, stamp), entry)
+
     def test_ac_0_7_3_clip_mapping_emits_clip(self):
         from common import apply_mapping
         _, clip = apply_mapping({'state': 'idle', 'dialogue': ''}, {'clip': ' c042 '})

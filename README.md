@@ -84,6 +84,14 @@ brew install --cask teochenglim/deepseek-pet/deepseek-pet
 
 Or download `DeepseekPet_<version>_aarch64.dmg` from the [Releases page](https://github.com/teochenglim/deepseek-pet/releases) and drag the app to Applications. Builds are not notarized yet: first launch needs right-click, Open (the cask clears the quarantine flag for you).
 
+If `brew install` says `Cask 'deepseek-pet' is unreadable ... <<<<<<< HEAD`, your local tap clone is stuck in a half-finished rebase from the old release flow (v0.8.5 and v0.8.6 had a CI commit that rewrote `main`). The tap is only a mirror, so throw it away and tap again:
+
+```bash
+brew untap teochenglim/deepseek-pet
+brew tap teochenglim/deepseek-pet https://github.com/teochenglim/deepseek-pet
+brew install --cask teochenglim/deepseek-pet/deepseek-pet
+```
+
 Open the app once, then use the menu-bar icon, **Install hooks**, to wire up your agents. Restart the agent session afterwards.
 
 ## How it works

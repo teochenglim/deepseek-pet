@@ -20,6 +20,10 @@ const STATES = [
 ];
 
 const ONE_SHOT_STATES = new Set(["jumping", "waving"]);
+// States that loop only while an agent is thinking or running tools. If no further event arrives
+// for WORKING_TIMEOUT_MS (an interrupted turn sends no Stop), fall back to idle.
+const WORKING_STATES = new Set(["running", "review"]);
+export const WORKING_TIMEOUT_MS = 90_000;
 // Manually triggered clips from the Play animation menu live under "extra:<id>" and play once.
 const EXTRA_PREFIX = "extra:";
 const isExtraState = (state) => String(state).startsWith(EXTRA_PREFIX);
@@ -65,6 +69,24 @@ export class SpriteAnimator {
     this.pendingOneShot = null; // 当前结束后将触发的排队一次性动画
     this.hoverJumpCyclesRemaining = 0;
     this.extraFps = new Map(); // extra:<id> -> fps
+    this.workTimer = null;
+    this.workingTimeoutMs = WORKING_TIMEOUT_MS;
+    this.onWorkingTimeout = null; // 回调：看门狗把宠物送回 idle 之后
+  }
+
+  /** Re-arm (working state) or clear (anything else) the "agent went quiet" watchdog. */
+  armWorkWatchdog(state) {
+    if (this.workTimer) {
+      clearTimeout(this.workTimer);
+      this.workTimer = null;
+    }
+    if (!WORKING_STATES.has(state)) return;
+    this.workTimer = setTimeout(() => {
+      this.workTimer = null;
+      if (!WORKING_STATES.has(this.currentState)) return;
+      this.transitionTo("idle");
+      if (this.onWorkingTimeout) this.onWorkingTimeout();
+    }, this.workingTimeoutMs);
   }
 
   async loadImage(nativePath) {
@@ -221,6 +243,7 @@ export class SpriteAnimator {
 
   /** 切换到新的动画状态 */
   transitionTo(state) {
+    this.armWorkWatchdog(state);
     if (this.isHoverJumping()) {
       if (state === "idle") return;
       this.stopHoverJump({ showFrame: false });
@@ -289,6 +312,7 @@ export class SpriteAnimator {
   triggerOneShot(state) {
     if (!isOneShotState(state)) return;
     if (!this.frames[state]) return;
+    if (!isExtraState(state)) this.armWorkWatchdog(state);
     if (this.isHoverJumping()) {
       this.stopHoverJump({ showFrame: false });
     }

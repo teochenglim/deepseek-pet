@@ -66,6 +66,7 @@ async function main() {
   const menu = createContextMenu(contextMenuEl);
   const permissionSound = new PermissionSound({ jsLog });
 
+  animator.onWorkingTimeout = () => bubble.show("", 0, "idle");
   animator.start();
   jsLog("info", "Main", `Animator started - hitTestReady=${animator.hitTestReady}`);
 

@@ -150,3 +150,29 @@ fn ac_0_6_5_right_click_opens_native_menu_directly() {
     let js = fs::read_to_string(base.join("src/context-menu.js")).unwrap();
     assert!(!js.contains("show_play_menu"));
 }
+
+fn watchdog_case(name: &str) {
+    let out = Command::new("node")
+        .current_dir(root().join("desktop/cross-platform"))
+        .args(["--test", "--test-reporter=tap"])
+        .arg(format!("--test-name-pattern=^{name}$"))
+        .arg("hooks/tests/animator-watchdog.test.mjs")
+        .output()
+        .expect("node is required to run the watchdog tests");
+    let s = String::from_utf8_lossy(&out.stdout);
+    assert!(out.status.success(), "{name} failed:\n{s}");
+    assert!(s.contains("# pass 1"), "{name} matched no test:\n{s}");
+}
+
+#[test]
+fn ac_0_8_8_working_state_falls_back_to_idle_when_agent_goes_quiet() {
+    watchdog_case("ac_0_8_8_working_state_falls_back_to_idle_when_agent_goes_quiet");
+}
+#[test]
+fn ac_0_8_8_new_event_keeps_working_state_alive() {
+    watchdog_case("ac_0_8_8_new_event_keeps_working_state_alive");
+}
+#[test]
+fn ac_0_8_8_stop_and_waiting_cancel_the_watchdog() {
+    watchdog_case("ac_0_8_8_stop_and_waiting_cancel_the_watchdog");
+}

@@ -18,6 +18,7 @@ macOS desktop pet: Tauri v2 shell forked from coding-agent-pet, Big Blue Fish an
 | Release | Theme | Status | Requirements |
 |---|---|---|---|
 | [v1.0.0](RELEASE/v1.0.0.md) | Stable release | planned | R-P1, R-D1, R-M1 |
+| [v0.8.11](RELEASE/v0.8.11.md) | Security scan: url 2.5.9 | active | R-D1 |
 | [v0.8.10](RELEASE/v0.8.10.md) | README install / upgrade / repair split | active | R-D1 |
 | [v0.8.9](RELEASE/v0.8.9.md) | Stuck tap (merge-conflict cask) recovery | active | R-D1 |
 | [v0.8.8](RELEASE/v0.8.8.md) | Working animation ends when agent goes quiet | active | R-K1 |

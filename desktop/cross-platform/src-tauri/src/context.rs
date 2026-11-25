@@ -16,6 +16,8 @@ use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub const BAR_WIDTH: usize = 10;
+/// How long the note stays in the speech bubble; it fades out over its last two seconds.
+pub const NOTE_MS: u64 = 20_000;
 /// Only the end of a transcript is read: the last assistant line is always near it.
 const TAIL_BYTES: u64 = 512 * 1024;
 const WINDOW_STANDARD: u64 = 200_000;
@@ -221,6 +223,11 @@ pub fn summary(usage: &Usage, now: u64) -> String {
     .join("\n")
 }
 
+/// The `show-context` event: the page shows `text` in the bubble for `ms` milliseconds.
+pub fn note_payload(text: &str) -> Value {
+    serde_json::json!({"text": text, "ms": NOTE_MS})
+}
+
 /// The text for the menu entry: the newest transcript's numbers, or a hint when there is none.
 pub fn load_text(projects: &Path) -> String {
     let now = SystemTime::now()
@@ -350,6 +357,18 @@ mod tests {
         assert_eq!(window_for("sonnet[1m]", 50_000), 1_000_000);
         // more than 200k in use can only be a long window
         assert_eq!(window_for("claude-sonnet-5-5", 302_000), 1_000_000);
+    }
+
+    #[test]
+    fn ac_0_9_12_the_note_lasts_twenty_seconds() {
+        assert_eq!(NOTE_MS, 20_000);
+    }
+
+    #[test]
+    fn ac_0_9_12_the_event_carries_the_text_and_the_duration() {
+        let payload = note_payload("Claude context\n42%");
+        assert_eq!(payload["text"], "Claude context\n42%");
+        assert_eq!(payload["ms"], 20_000);
     }
 
     #[test]

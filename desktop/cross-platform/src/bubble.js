@@ -89,15 +89,17 @@ export class DialogueBubble {
     this.render();
   }
 
-  /** 显示多行说明（Show Claude context），保持 `ms` 毫秒后淡出；忽略折叠状态。
+  /** 显示多行说明（Show Claude context），保持 `ms` 毫秒（最后两秒淡出）；忽略折叠状态。
    * 说明显示期间窗口会变大（见 main.js），结束时调用 onNoteEnd 让窗口恢复原样。 */
-  showNote(text, ms = 15000) {
+  showNote(text, ms = 20000) {
     this.collapsed = false;
     this.noteActive = false; // show() must not end the note that is starting
     this.show(text, 0, "idle", true);
     this.el.classList.add("note");
     this.noteActive = true;
     this.clearAutoHide();
+    // fade out over the last two seconds, then hide (which also gives the window back)
+    this.fadeTimer = setTimeout(() => this.el.classList.add("fading"), Math.max(0, ms - 2000));
     this.hideTimer = setTimeout(() => this.hide(), ms);
   }
 
@@ -165,6 +167,11 @@ export class DialogueBubble {
   }
 
   clearAutoHide() {
+    if (this.fadeTimer) {
+      clearTimeout(this.fadeTimer);
+      this.fadeTimer = null;
+    }
+    this.el.classList.remove("fading");
     if (this.hideTimer) {
       clearTimeout(this.hideTimer);
       this.hideTimer = null;

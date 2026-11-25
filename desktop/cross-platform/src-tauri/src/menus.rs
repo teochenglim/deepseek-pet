@@ -563,7 +563,7 @@ pub fn play(app: &AppHandle, wanted: &str, reveal: bool) {
 /// Carry out a parsed menu action.
 pub fn run(app: &AppHandle, action: Action) {
     match action {
-        Action::Show => crate::commands::show_pet(app),
+        Action::Show => crate::commands::show_pet_fresh(app),
         Action::Hide => {
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.hide();
@@ -629,7 +629,7 @@ pub fn run(app: &AppHandle, action: Action) {
         Action::ShowContext => {
             crate::commands::show_pet(app);
             let text = crate::context::load_text(&crate::context::claude_projects_dir());
-            let _ = app.emit("show-context", text);
+            let _ = app.emit("show-context", crate::context::note_payload(&text));
         }
         Action::Hooks { agent, install } => {
             // blocking and short (it rewrites one small config file); the menu is rebuilt after

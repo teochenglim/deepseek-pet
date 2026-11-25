@@ -109,26 +109,61 @@ async function main() {
       .catch((e) => jsLog("error", "Main", `play-animation failed: ${e}`));
   });
 
-  // Show Claude context (menu-bar icon or right-click menu): the backend sends the text. The pet
-  // window is only a little bigger than the pet, so it grows (up and sideways, the pet stays where
-  // it is) while the note shows and shrinks back when the note ends.
+  // Show Claude context (menu-bar icon or right-click menu). The pet window is only a little bigger
+  // than the pet, so while the note shows the window grows up and sideways (Rust keeps the pet where
+  // it is on screen) and the note is laid over the new room. The pet's distance from the top is set
+  // here explicitly (--sprite-top) instead of being pushed by the bubble, so even if the window
+  // cannot grow the pet stays visible.
   const NOTE_WIDTH = 300;
+  const NOTE_GAP = 8;
+  let noteSpriteTop = 0; // where the pet sits before any note; kept while a note is up
+  const endNoteLayout = () => {
+    document.body.classList.remove("note-open");
+    document.body.style.removeProperty("--sprite-top");
+  };
   bubble.onNoteEnd = () => {
+    endNoteLayout();
     invoke("note_window_restore").catch((e) => jsLog("warn", "Main", `note restore failed: ${e}`));
   };
-  let noteBaseHeight = 0; // the bubble's height before the first note; kept while a note is up
   const unlistenContext = await listen("show-context", async (event) => {
+    const { text, ms } = event.payload;
     try {
-      const baseHeight = bubble.noteActive ? noteBaseHeight : bubbleEl.offsetHeight;
-      noteBaseHeight = baseHeight;
-      await invoke("note_window_grow", { width: NOTE_WIDTH, extraHeight: 0 });
-      bubble.showNote(String(event.payload), 15000);
+      if (!bubble.noteActive) noteSpriteTop = Math.round(petSprite.getBoundingClientRect().top);
+      document.body.style.setProperty("--sprite-top", `${noteSpriteTop}px`);
+      document.body.classList.add("note-open");
+      let grown = 0;
+      await invoke("note_window_grow", { width: NOTE_WIDTH, extraHeight: 0 }).catch((e) =>
+        jsLog("warn", "Main", `note grow failed: ${e}`),
+      );
+      bubble.showNote(String(text), ms);
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-      const extra = Math.max(0, Math.ceil(bubbleEl.offsetHeight - baseHeight));
-      await invoke("note_window_grow", { width: NOTE_WIDTH, extraHeight: extra });
+      const need = Math.max(0, Math.ceil(bubbleEl.offsetHeight + NOTE_GAP - noteSpriteTop));
+      await invoke("note_window_grow", { width: NOTE_WIDTH, extraHeight: need })
+        .then(() => {
+          grown = need;
+        })
+        .catch((e) => jsLog("warn", "Main", `note grow failed: ${e}`));
+      if (bubble.noteActive) {
+        document.body.style.setProperty("--sprite-top", `${noteSpriteTop + grown}px`);
+      }
     } catch (e) {
       jsLog("error", "Main", `show-context failed: ${e}`);
     }
+  });
+
+  // "Show Big Blue Fish" / Dock click: whatever happened to the page, draw the pet again
+  const unlistenReset = await listen("reset-pet", () => {
+    bubble.hide(); // ends a note, which also clears the note layout
+    endNoteLayout();
+    petSprite.style.display = "block";
+    petSprite.style.visibility = "visible";
+    petSprite.style.opacity = "1";
+    petSprite.style.width = `${scaledWidth}px`;
+    petSprite.style.height = `${scaledHeight}px`;
+    animator.stop();
+    animator.start(); // new timer, and it draws the current frame
+    animator.showCurrentFrame();
+    jsLog("info", "Main", "reset-pet: pet redrawn");
   });
 
   menu.build(config.menu_items);
@@ -141,6 +176,7 @@ async function main() {
     unlistenStateChange();
     unlistenPlay();
     unlistenContext();
+    unlistenReset();
     interactions.stop();
     menu.stop();
     animator.stop();

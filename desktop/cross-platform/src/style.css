@@ -48,10 +48,15 @@ body {
   cursor: default;
 }
 
-/* Show Claude context: several lines, so it wraps and is as wide as the (temporarily grown) window */
+/* Show Claude context: several lines, laid over the room the window grew into (main.js), so the
+   note never pushes the pet. The pet's distance from the top is set explicitly while it shows. */
 .bubble.note {
+  position: absolute;
+  top: 4px;
+  left: 8px;
+  right: 8px;
   display: block;
-  width: calc(100vw - 16px);
+  margin: 0;
   max-width: none;
   font-size: 8pt;
   line-height: 1.35;
@@ -63,6 +68,16 @@ body {
 .bubble.note #bubble-text {
   display: block;
   overflow: visible;
+}
+
+/* the last two seconds of the note */
+.bubble.note.fading {
+  opacity: 0;
+  transition: opacity 2s ease;
+}
+
+body.note-open #pet-sprite {
+  margin-top: var(--sprite-top, 0px);
 }
 
 .bubble.hidden {

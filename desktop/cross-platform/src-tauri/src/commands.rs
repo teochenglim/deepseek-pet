@@ -118,6 +118,14 @@ pub fn show_pet(app: &tauri::AppHandle) {
     }
 }
 
+/// "Show Big Blue Fish" and Dock click: show the window and make sure the pet is drawn - the window
+/// goes back to its normal size and onto a screen, and the page redraws the pet and clears any note.
+pub fn show_pet_fresh(app: &tauri::AppHandle) {
+    show_pet(app);
+    crate::note_window::reset(app);
+    let _ = tauri::Emitter::emit(app, "reset-pet", ());
+}
+
 /// 清除磁盘上所有会话文件，并清空内存中的活动 map。由前端三连击交互触发。
 /// 返回文件数量，以便渲染器展示本次调用的气泡消息。
 #[tauri::command]

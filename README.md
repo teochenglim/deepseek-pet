@@ -123,7 +123,7 @@ Change any row from the menu-bar icon, **Map animations**.
 
 ## Show Claude context
 
-Menu-bar icon or the pet's right-click menu, **Show Claude context**: the pet says how full Claude Code's context window is (model, a bar, tokens used, cache read and write, output, how long ago). Claude Code does not let other programs read the `/context` screen, so the pet reads the numbers from your newest Claude Code session transcript (`~/.claude/projects/*/*.jsonl`); it installs nothing and changes nothing in Claude Code. The window size is not in the transcript, so it is assumed and shown with a `~` (1M for a `1m` model or once more than 200k are in use, otherwise 200k). It says so when there is no session yet.
+Menu-bar icon or the pet's right-click menu, **Show Claude context**: the pet says how full Claude Code's context window is (model, a bar, tokens used, cache read and write, output, how long ago). Claude Code does not let other programs read the `/context` screen, so the pet reads the numbers from your newest Claude Code session transcript (`~/.claude/projects/*/*.jsonl`); it installs nothing and changes nothing in Claude Code. The window size is not in the transcript, so it is assumed and shown with a `~` (1M for a `1m` model or once more than 200k are in use, otherwise 200k). It stays for 20 seconds and fades out. It says so when there is no session yet. If the pet is ever missing (hidden, or its window left every screen), **Show Big Blue Fish** in the menu-bar icon (or a Dock click) redraws it and puts it back on screen.
 
 ## Hooks from the command line
 

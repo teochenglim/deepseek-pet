@@ -85,6 +85,80 @@ pub fn note_window_restore(app: tauri::AppHandle, state: State<NoteWindow>) -> R
     apply(&win, pos, size)
 }
 
+/// x, y, width, height in physical pixels.
+pub type Rect = (i32, i32, u32, u32);
+
+/// Whether the window's centre is on any screen. A pet whose window ended up off every screen
+/// (a monitor unplugged, a bad drag) cannot be seen or reached.
+pub fn center_visible(monitors: &[Rect], win: Rect) -> bool {
+    let cx = i64::from(win.0) + i64::from(win.2) / 2;
+    let cy = i64::from(win.1) + i64::from(win.3) / 2;
+    monitors.iter().any(|m| {
+        cx >= i64::from(m.0)
+            && cx < i64::from(m.0) + i64::from(m.2)
+            && cy >= i64::from(m.1)
+            && cy < i64::from(m.1) + i64::from(m.3)
+    })
+}
+
+/// Bottom-right corner of `monitor` for a window of `win`'s size, `margin` pixels from the edges
+/// (where the pet starts).
+pub fn corner_position(monitor: Rect, win: Rect, margin: i32) -> (i32, i32) {
+    (
+        monitor.0 + monitor.2 as i32 - win.2 as i32 - margin,
+        monitor.1 + monitor.3 as i32 - win.3 as i32 - margin,
+    )
+}
+
+/// "Show Big Blue Fish": whatever a note did to the window is undone, and a window that is off
+/// every screen goes back to the primary screen's corner. Errors are ignored: this is a rescue.
+pub fn reset(app: &tauri::AppHandle) {
+    if let Some(state) = app.try_state::<NoteWindow>() {
+        let _ = note_window_restore(app.clone(), state);
+    }
+    let Some(win) = app.get_webview_window("main") else {
+        return;
+    };
+    let (Ok(pos), Ok(size), Ok(monitors)) = (
+        win.outer_position(),
+        win.outer_size(),
+        win.available_monitors(),
+    ) else {
+        return;
+    };
+    let rects: Vec<Rect> = monitors
+        .iter()
+        .map(|m| {
+            (
+                m.position().x,
+                m.position().y,
+                m.size().width,
+                m.size().height,
+            )
+        })
+        .collect();
+    let rect = (pos.x, pos.y, size.width, size.height);
+    if rects.is_empty() || center_visible(&rects, rect) {
+        return;
+    }
+    let primary = win
+        .primary_monitor()
+        .ok()
+        .flatten()
+        .map(|m| {
+            (
+                m.position().x,
+                m.position().y,
+                m.size().width,
+                m.size().height,
+            )
+        })
+        .unwrap_or(rects[0]);
+    let margin = (20.0 * win.scale_factor().unwrap_or(1.0)) as i32;
+    let (x, y) = corner_position(primary, rect, margin);
+    let _ = win.set_position(tauri::PhysicalPosition::new(x, y));
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -114,6 +188,32 @@ mod tests {
         assert_eq!(
             shrink(dragged, size, growth),
             ((1050.0, 630.0), (140.0, 220.0))
+        );
+    }
+
+    #[test]
+    fn ac_0_9_11_a_window_off_every_screen_is_detected() {
+        let screens = [(0, 0, 2560, 1440), (2560, 0, 1920, 1080)];
+        assert!(center_visible(&screens, (2000, 1000, 280, 440)));
+        assert!(center_visible(&screens, (2600, 100, 280, 440)));
+        // dragged far away, or its monitor was unplugged
+        assert!(!center_visible(&screens, (9000, 100, 280, 440)));
+        assert!(!center_visible(&screens, (-3000, -3000, 280, 440)));
+        assert!(!center_visible(&[], (0, 0, 280, 440)));
+        // only its edge on a screen is not enough: the pet is drawn in the middle
+        assert!(!center_visible(&screens, (-270, 100, 280, 440)));
+    }
+
+    #[test]
+    fn ac_0_9_11_an_off_screen_window_goes_to_the_primary_screens_corner() {
+        let primary = (0, 0, 2560, 1440);
+        let (x, y) = corner_position(primary, (9000, 9000, 280, 440), 40);
+        assert_eq!((x, y), (2560 - 280 - 40, 1440 - 440 - 40));
+        assert!(center_visible(&[primary], (x, y, 280, 440)));
+        // a primary monitor that does not start at the origin
+        assert_eq!(
+            corner_position((1920, 0, 1920, 1080), (0, 0, 280, 440), 40),
+            (1920 + 1920 - 280 - 40, 1080 - 440 - 40)
         );
     }
 }

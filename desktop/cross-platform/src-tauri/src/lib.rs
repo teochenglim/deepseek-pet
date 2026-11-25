@@ -261,7 +261,7 @@ pub fn run() {
             // Clicking the Dock icon brings back a pet hidden with "Hide for now"
             #[cfg(target_os = "macos")]
             if let tauri::RunEvent::Reopen { .. } = event {
-                commands::show_pet(app);
+                commands::show_pet_fresh(app);
             }
             #[cfg(not(target_os = "macos"))]
             let _ = (app, event);

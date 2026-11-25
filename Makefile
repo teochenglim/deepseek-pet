@@ -64,6 +64,14 @@ convert-assets: ## (0.2.0) WebM -> frames; needs ffmpeg + Pillow
 convert-extras: ## (0.6.0) every clip -> frames/extras for the Play animation menu
 	python3 tools/convert-assets.py --extras --input $(FISH_DIR) --output assets/big-blue-fish
 
+.PHONY: statusline-preview
+statusline-preview: ## Print the Claude Code status line (avatar + numbers) in this terminal
+	./scripts/statusline-preview.sh
+
+.PHONY: statusline-logo
+statusline-logo: ## Regenerate the status line avatar (ROWS=16); then make statusline-preview
+	python3 tools/make_statusline_logo.py --rows $(or $(ROWS),16)
+
 .PHONY: clean
 clean: ## Remove cargo build artifacts
 	cargo clean --manifest-path $(MANIFEST)

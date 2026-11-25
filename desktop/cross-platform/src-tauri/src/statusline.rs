@@ -10,7 +10,7 @@ use serde_json::{json, Value};
 use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
 
-/// The avatar as 24-bit-colour half-block text; regenerate with `tools/make_statusline_logo.py`.
+/// The avatar as 24-bit-colour quadrant-block text; regenerate with `tools/make_statusline_logo.py`.
 const LOGO: &str = include_str!("../../hooks/statusline-logo.ansi");
 /// Claude Code trims leading plain spaces from status lines; a no-break space survives.
 const NBSP: char = '\u{a0}';
@@ -320,6 +320,8 @@ mod tests {
         dir
     }
 
+    const BLOCKS: &str = "▘▝▀▖▌▞▛▗▚▐▜▄▙▟█";
+
     fn payload() -> Value {
         json!({
             "session_id": "s1",
@@ -334,7 +336,10 @@ mod tests {
     #[test]
     fn ac_0_9_1_statusline_shows_avatar_and_numbers() {
         let out = render(&payload());
-        assert!(out.contains('▀'), "avatar half-blocks missing");
+        assert!(
+            out.chars().any(|c| BLOCKS.contains(c)),
+            "avatar blocks missing"
+        );
         assert!(out.contains("\x1b[38;2;"), "avatar colour missing");
         for want in ["Opus 5", "deepseek-pet", "42%", "84k/200k", "$0.42"] {
             assert!(out.contains(want), "{want} missing in {out}");
@@ -349,7 +354,7 @@ mod tests {
     #[test]
     fn ac_0_9_1_broken_payload_still_prints_the_avatar() {
         let out = render(&json!({}));
-        assert!(out.contains('▀'));
+        assert!(out.chars().any(|c| BLOCKS.contains(c)));
         assert!(out.contains("context: no data yet"));
     }
 

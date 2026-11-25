@@ -18,6 +18,7 @@ macOS desktop pet: Tauri v2 shell forked from coding-agent-pet, Big Blue Fish an
 | Release | Theme | Status | Requirements |
 |---|---|---|---|
 | [v1.0.0](RELEASE/v1.0.0.md) | Stable release | planned | R-P1, R-D1, R-M1 |
+| [v0.9.5](RELEASE/v0.9.5.md) | Statusline removed; Show Claude context reads the transcript and speaks in the pet's bubble | active | R-X1 |
 | [v0.9.4](RELEASE/v0.9.4.md) | Statusline is just the avatar; Show Claude context is its own feature | active | R-X1 |
 | [v0.9.3](RELEASE/v0.9.3.md) | Statusline and context display split into two functions | active | R-X1 |
 | [v0.9.2](RELEASE/v0.9.2.md) | Statusline text rows stay aligned in Claude Code | active | R-X1 |

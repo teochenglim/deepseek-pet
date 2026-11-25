@@ -109,9 +109,26 @@ async function main() {
       .catch((e) => jsLog("error", "Main", `play-animation failed: ${e}`));
   });
 
-  // Show context (menu-bar icon or right-click menu): the backend sends the text to display
-  const unlistenContext = await listen("show-context", (event) => {
-    bubble.showNote(String(event.payload), 15000);
+  // Show Claude context (menu-bar icon or right-click menu): the backend sends the text. The pet
+  // window is only a little bigger than the pet, so it grows (up and sideways, the pet stays where
+  // it is) while the note shows and shrinks back when the note ends.
+  const NOTE_WIDTH = 300;
+  bubble.onNoteEnd = () => {
+    invoke("note_window_restore").catch((e) => jsLog("warn", "Main", `note restore failed: ${e}`));
+  };
+  let noteBaseHeight = 0; // the bubble's height before the first note; kept while a note is up
+  const unlistenContext = await listen("show-context", async (event) => {
+    try {
+      const baseHeight = bubble.noteActive ? noteBaseHeight : bubbleEl.offsetHeight;
+      noteBaseHeight = baseHeight;
+      await invoke("note_window_grow", { width: NOTE_WIDTH, extraHeight: 0 });
+      bubble.showNote(String(event.payload), 15000);
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const extra = Math.max(0, Math.ceil(bubbleEl.offsetHeight - baseHeight));
+      await invoke("note_window_grow", { width: NOTE_WIDTH, extraHeight: extra });
+    } catch (e) {
+      jsLog("error", "Main", `show-context failed: ${e}`);
+    }
   });
 
   menu.build(config.menu_items);

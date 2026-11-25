@@ -7,7 +7,6 @@ use crate::hooks::{self, Installer, Status};
 use crate::i18n::{self, tr};
 use crate::mapping::{self, AgentDef, Choice, Mapping, MappingStore, MAPPABLE_STATES};
 use crate::settings::SettingsStore;
-use crate::statusline;
 use std::sync::Arc;
 use tauri::menu::{CheckMenuItem, IsMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::{AppHandle, Emitter, Manager, Wry};
@@ -431,21 +430,6 @@ fn hooks_menu(app: &AppHandle, installer_ok: bool, status: &Status) -> tauri::Re
             )?)?;
         }
     }
-    // the status line is written by the app itself, so it needs no Python
-    root.append(&PredefinedMenuItem::separator(app)?)?;
-    let (text, enabled, installed) =
-        statusline::menu_row(statusline::state(&statusline::claude_settings_path()));
-    root.append(&MenuItem::with_id(
-        app,
-        format!(
-            "hooks:{}:{}",
-            if installed { "remove" } else { "install" },
-            statusline::MENU_ID
-        ),
-        &text,
-        enabled,
-        None::<&str>,
-    )?)?;
     Ok(root)
 }
 
@@ -644,20 +628,8 @@ pub fn run(app: &AppHandle, action: Action) {
         }
         Action::ShowContext => {
             crate::commands::show_pet(app);
-            let text = crate::context::load_text(&crate::home::user_home_dir());
+            let text = crate::context::load_text(&crate::context::claude_projects_dir());
             let _ = app.emit("show-context", text);
-        }
-        Action::Hooks { agent, install } if agent == statusline::MENU_ID => {
-            let exe = std::env::current_exe().unwrap_or_default();
-            if let Err(e) = statusline::set_installed(
-                &statusline::claude_settings_path(),
-                &crate::home::user_home_dir(),
-                &exe,
-                install,
-            ) {
-                tracing::warn!("Cannot change the Claude Code status line: {e}");
-            }
-            refresh_tray(app);
         }
         Action::Hooks { agent, install } => {
             // blocking and short (it rewrites one small config file); the menu is rebuilt after
@@ -738,21 +710,22 @@ mod tests {
     }
 
     #[test]
-    fn ac_0_9_4_statusline_row_uses_the_install_ids() {
-        assert_eq!(
-            parse_action("hooks:install:claude-statusline", ""),
-            Some(Action::Hooks {
-                agent: statusline::MENU_ID.into(),
-                install: true
-            })
-        );
-        assert_eq!(
-            parse_action("hooks:remove:claude-statusline", ""),
-            Some(Action::Hooks {
-                agent: statusline::MENU_ID.into(),
-                install: false
-            })
-        );
+    fn ac_0_9_4_context_ids_do_not_collide_with_other_entries() {
+        // "context" must not be swallowed by a prefix rule of another entry, on either menu
+        for other in ["show", "hide", "quit", "lang", "map-reset", "play:context"] {
+            assert_ne!(
+                parse_action(other, ""),
+                Some(Action::ShowContext),
+                "{other}"
+            );
+        }
+        for other in ["pop:hide", "pop:quit", "pop:play:random"] {
+            assert_ne!(
+                parse_action(other, POPUP_PREFIX),
+                Some(Action::ShowContext),
+                "{other}"
+            );
+        }
     }
 
     #[test]

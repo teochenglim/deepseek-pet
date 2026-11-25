@@ -121,12 +121,9 @@ Claude Code / ZCode / Codex / Gemini / ...  --hook-->  pet-hook.sh  --localhost-
 
 Change any row from the menu-bar icon, **Map animations**.
 
-## Claude Code status line and Show Claude context
+## Show Claude context
 
-Two separate things:
-
-- **Statusline** (menu-bar icon, **Install hooks**, **Claude Code statusline**): Claude Code shows the fish under the prompt, nothing else (restart the session). It needs no Python: the status line is the app itself. If you already have your own status line it is left alone.
-- **Show Claude context** (menu-bar icon and the pet's right-click menu): a bubble with the context window, tokens used, cache and cost. Claude Code does not let other programs read the `/context` screen, so these are the numbers it gives its status line command; the installed statusline records them silently, so you need it installed, a restart and one message before this shows anything.
+Menu-bar icon or the pet's right-click menu, **Show Claude context**: the pet says how full Claude Code's context window is (model, a bar, tokens used, cache read and write, output, how long ago). Claude Code does not let other programs read the `/context` screen, so the pet reads the numbers from your newest Claude Code session transcript (`~/.claude/projects/*/*.jsonl`); it installs nothing and changes nothing in Claude Code. The window size is not in the transcript, so it is assumed and shown with a `~` (1M for a `1m` model or once more than 200k are in use, otherwise 200k). It says so when there is no session yet.
 
 ## Hooks from the command line
 

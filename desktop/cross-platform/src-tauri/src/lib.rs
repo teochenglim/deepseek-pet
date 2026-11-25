@@ -10,10 +10,11 @@ mod context;
 mod home;
 mod hooks;
 mod i18n;
+mod legacy;
 mod mapping;
 mod menus;
+mod note_window;
 mod settings;
-mod statusline;
 mod watcher;
 
 use aggregator::ActivityAggregator;
@@ -75,9 +76,10 @@ impl Drop for SocketGuard {
     }
 }
 
-/// `deepseek-pet --statusline`: Claude Code's status line command. Runs before Tauri starts.
-pub fn run_statusline() -> i32 {
-    statusline::run()
+/// `deepseek-pet --statusline`: only an old Claude Code status line setting still runs this (see
+/// `legacy.rs`). Answers at once, before Tauri starts, so no second pet window opens.
+pub fn run_legacy_statusline() -> i32 {
+    legacy::run()
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -107,6 +109,13 @@ pub fn run() {
             }
         })
         .setup(|app| {
+            // 0. v0.9.0-0.9.4 left a Claude Code status line behind for some users; remove it
+            match legacy::cleanup(&legacy::claude_settings_path(), &home::user_home_dir()) {
+                Ok(true) => info!("Removed the old Claude Code status line setting"),
+                Ok(false) => {}
+                Err(e) => warn!("Cannot remove the old status line setting: {e}"),
+            }
+
             // 1. 加载配置
             let config = PetConfig::load();
 
@@ -192,6 +201,7 @@ pub fn run() {
             // 10. 存储配置 + 聚合器，供前端 / 命令访问
             let endpoint_for_guard = config.event_endpoint.clone();
             app.manage(session_mgr.clone());
+            app.manage(note_window::NoteWindow::default());
             app.manage(config);
             // RAII 兜底：若进程 panic 并展开（Drop 在展开期间运行），则删除 socket
             // 文件。正常退出路径会在 `quit_app` 中显式清理；见 SocketGuard 的文档注释。
@@ -241,7 +251,9 @@ pub fn run() {
             commands::read_file_bytes,
             commands::read_frames_batch,
             commands::cursor_in_window,
-            commands::js_log
+            commands::js_log,
+            note_window::note_window_grow,
+            note_window::note_window_restore
         ])
         .build(tauri::generate_context!())
         .expect("error while building DeepseekPet")

@@ -320,7 +320,7 @@ mod tests {
         dir
     }
 
-    const BLOCKS: &str = "▘▝▀▖▌▞▛▗▚▐▜▄▙▟█";
+    const BLOCKS: &str = "▀▄▌▐█";
 
     fn payload() -> Value {
         json!({
@@ -349,6 +349,30 @@ mod tests {
             out.lines().all(|l| !l.starts_with(' ')),
             "leading plain spaces would be trimmed by Claude Code"
         );
+    }
+
+    #[test]
+    fn ac_0_9_1_avatar_uses_only_widely_measured_block_characters() {
+        // Claude Code shifted the text rows when the avatar held other quadrant glyphs (v0.9.1)
+        for c in LOGO
+            .chars()
+            .filter(|c| ('\u{2580}'..='\u{259f}').contains(c))
+        {
+            assert!(BLOCKS.contains(c), "{c} may be mis-measured by Claude Code");
+        }
+        // and every text row starts in the same column
+        let plain = |l: &str| visible_width(l);
+        let out = render(&payload());
+        let starts: Vec<usize> = out
+            .lines()
+            .filter_map(|l| {
+                ["Opus 5", "context", "$0.42"]
+                    .iter()
+                    .find_map(|t| l.find(t).map(|i| plain(&l[..i])))
+            })
+            .collect();
+        assert_eq!(starts.len(), 3, "{out}");
+        assert!(starts.iter().all(|s| *s == starts[0]), "{starts:?}");
     }
 
     #[test]

@@ -3,8 +3,8 @@
 
     make_statusline_logo.py [--frame PNG] [--rows N] [--out FILE]
 
-Each character carries 2x2 sub-pixels (quadrant block characters, best two-colour fit, 24-bit
-colour), so `--rows 16` gives an avatar 32 sub-pixels tall and about 51 wide. Transparent pixels stay transparent, so the
+Each character carries 2x2 sub-pixels drawn with the half blocks (best two-colour split, top/bottom
+or left/right, 24-bit colour), so `--rows 16` gives an avatar 32 sub-pixels tall and about 51 wide. Transparent pixels stay transparent, so the
 avatar sits on any terminal background. Needs Pillow only (no chafa / ffmpeg at run time);
 the output is committed as hooks/statusline-logo.ansi and built into the app (src-tauri/src/statusline.rs).
 """
@@ -20,8 +20,10 @@ OPAQUE = 96  # alpha at or above this counts as a pixel
 RESET = "\x1b[0m"
 
 
-# quadrant glyphs by mask: bit0 top-left, bit1 top-right, bit2 bottom-left, bit3 bottom-right
-QUADRANTS = " ▘▝▀▖▌▞▛▗▚▐▜▄▙▟█"
+# Only the half blocks and the full block: Claude Code mis-measured the other quadrant glyphs
+# (text beside the avatar drifted), while these line up. Masks: bit0 top-left, bit1 top-right,
+# bit2 bottom-left, bit3 bottom-right.
+GLYPHS = {0b0011: "▀", 0b1100: "▄", 0b0101: "▌", 0b1010: "▐", 0b1111: "█"}
 # a character cell is about twice as tall as wide, so a 2x2 sub-pixel is half as wide as it is tall
 CELL_ASPECT = 2.0
 
@@ -47,25 +49,34 @@ def distance(pixels, colour):
     return sum(sum((p[i] - colour[i]) ** 2 for i in range(3)) for p in pixels)
 
 
+def paint(fg, bg, glyph):
+    out = f"\x1b[38;2;{fg[0]};{fg[1]};{fg[2]}m"
+    if bg:
+        out += f"\x1b[48;2;{bg[0]};{bg[1]};{bg[2]}m"
+    return out + glyph + RESET
+
+
 def cell(pixels):
     """pixels = [top-left, top-right, bottom-left, bottom-right] as RGBA; returns the coloured glyph."""
     solid = [i for i, p in enumerate(pixels) if p[3] >= OPAQUE]
     if not solid:
         return " "
-    if len(solid) < 4:  # edge of the drawing: only the drawn sub-pixels, on the terminal background
-        mask = sum(1 << i for i in solid)
-        r, g, b = mean([pixels[i] for i in solid])
-        return f"\x1b[38;2;{r};{g};{b}m{QUADRANTS[mask]}{RESET}"
+    if len(solid) < 4:  # edge of the drawing: the glyph that covers the drawn sub-pixels best, no background
+        drawn = sum(1 << i for i in solid)
+        mask = min(GLYPHS, key=lambda m: (bin(m ^ drawn).count("1"), -bin(m & drawn).count("1")))
+        return paint(mean([pixels[i] for i in solid]), None, GLYPHS[mask])
     best = None
-    for mask in range(1, 8):  # the other 7 splits are these with fg/bg swapped
-        top = [pixels[i] for i in range(4) if mask >> i & 1]
+    for mask in (0b0011, 0b0101):  # top/bottom or left/right; the swapped splits are ▄ and ▐
+        first = [pixels[i] for i in range(4) if mask >> i & 1]
         rest = [pixels[i] for i in range(4) if not mask >> i & 1]
-        fg, bg = mean(top), mean(rest)
-        err = distance(top, fg) + distance(rest, bg)
+        fg, bg = mean(first), mean(rest)
+        err = distance(first, fg) + distance(rest, bg)
         if best is None or err < best[0]:
-            best = (err, mask, fg, bg)
-    _, mask, fg, bg = best
-    return f"\x1b[38;2;{fg[0]};{fg[1]};{fg[2]}m\x1b[48;2;{bg[0]};{bg[1]};{bg[2]}m{QUADRANTS[mask]}{RESET}"
+            best = (err, GLYPHS[mask], fg, bg)
+    whole = mean(pixels)
+    if distance(pixels, whole) <= best[0]:  # nothing to split: one flat colour
+        return paint(whole, None, GLYPHS[0b1111])
+    return paint(best[2], best[3], best[1])
 
 
 def render(img):

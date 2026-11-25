@@ -18,6 +18,7 @@ macOS desktop pet: Tauri v2 shell forked from coding-agent-pet, Big Blue Fish an
 | Release | Theme | Status | Requirements |
 |---|---|---|---|
 | [v1.0.0](RELEASE/v1.0.0.md) | Stable release | planned | R-P1, R-D1, R-M1 |
+| [v0.9.2](RELEASE/v0.9.2.md) | Statusline text rows stay aligned in Claude Code | active | R-X1 |
 | [v0.9.1](RELEASE/v0.9.1.md) | Sharper statusline avatar, `make statusline-preview` | active | R-X1 |
 | [v0.9.0](RELEASE/v0.9.0.md) | Claude Code statusline with the avatar, Show context | active | R-X1 |
 | [v0.8.12](RELEASE/v0.8.12.md) | Security scan: cookie 0.18.3, deps to latest | active | R-D1 |

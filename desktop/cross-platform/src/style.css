@@ -48,6 +48,13 @@ body {
   cursor: default;
 }
 
+.bubble.note {
+  max-width: calc(100vw - 16px);
+  font-size: 8pt;
+  text-align: left;
+  white-space: pre-line;
+}
+
 .bubble.hidden {
   opacity: 0;
   pointer-events: none;
@@ -87,6 +94,7 @@ body {
 }
 
 #bubble-text {
+  white-space: pre-line; /* Show context uses line breaks */
   overflow: hidden;
   text-overflow: ellipsis;
 }

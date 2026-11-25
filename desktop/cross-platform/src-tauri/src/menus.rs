@@ -7,6 +7,7 @@ use crate::hooks::{self, Installer, Status};
 use crate::i18n::{self, tr};
 use crate::mapping::{self, AgentDef, Choice, Mapping, MappingStore, MAPPABLE_STATES};
 use crate::settings::SettingsStore;
+use crate::statusline;
 use std::sync::Arc;
 use tauri::menu::{CheckMenuItem, IsMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::{AppHandle, Emitter, Manager, Wry};
@@ -37,6 +38,8 @@ pub enum Action {
     MapReset,
     /// Switch the menus and the bubble between English and Chinese.
     ToggleLanguage,
+    /// Show the numbers behind `/context` in the speech bubble.
+    ShowContext,
     /// Let one source drive the pet (`Some(agent id)`), or all of them (`None`).
     Source(Option<String>),
     /// Install (`true`) or remove (`false`) the pet's hooks in one agent.
@@ -55,6 +58,7 @@ pub fn parse_action(id: &str, prefix: &str) -> Option<Action> {
         "quit" => Some(Action::Quit),
         "map-reset" => Some(Action::MapReset),
         "lang" => Some(Action::ToggleLanguage),
+        "context" => Some(Action::ShowContext),
         _ => {
             if let Some(wanted) = rest.strip_prefix("play:") {
                 return Some(Action::Play(wanted.to_string()));
@@ -156,6 +160,13 @@ pub fn pet_popup(app: &AppHandle, clips: &[Clip]) -> tauri::Result<Menu<Wry>> {
         .collect();
     menu.append_items(&items)?;
     menu.append(&PredefinedMenuItem::separator(app)?)?;
+    menu.append(&MenuItem::with_id(
+        app,
+        format!("{POPUP_PREFIX}context"),
+        tr("Show context", "显示上下文"),
+        true,
+        None::<&str>,
+    )?)?;
     menu.append(&MenuItem::with_id(
         app,
         format!("{POPUP_PREFIX}hide"),
@@ -403,18 +414,33 @@ fn hooks_menu(app: &AppHandle, installer_ok: bool, status: &Status) -> tauri::Re
             false,
             None::<&str>,
         )?)?;
-        return Ok(root);
+    } else {
+        for row in hooks::install_rows(mapping::agents(), status) {
+            let kind = if row.installed { "remove" } else { "install" };
+            root.append(&MenuItem::with_id(
+                app,
+                format!("hooks:{kind}:{}", row.id),
+                &row.text,
+                row.enabled,
+                None::<&str>,
+            )?)?;
+        }
     }
-    for row in hooks::install_rows(mapping::agents(), status) {
-        let kind = if row.installed { "remove" } else { "install" };
-        root.append(&MenuItem::with_id(
-            app,
-            format!("hooks:{kind}:{}", row.id),
-            &row.text,
-            row.enabled,
-            None::<&str>,
-        )?)?;
-    }
+    // the status line is written by the app itself, so it needs no Python
+    root.append(&PredefinedMenuItem::separator(app)?)?;
+    let (text, enabled, installed) =
+        statusline::menu_row(statusline::state(&statusline::claude_settings_path()));
+    root.append(&MenuItem::with_id(
+        app,
+        format!(
+            "hooks:{}:{}",
+            if installed { "remove" } else { "install" },
+            statusline::MENU_ID
+        ),
+        &text,
+        enabled,
+        None::<&str>,
+    )?)?;
     Ok(root)
 }
 
@@ -462,6 +488,13 @@ pub fn build_tray_menu(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
     let map = map_menu(app, &clips, &mapping, last, &installed)?;
     let source = source_menu(app, &installed, active.as_deref())?;
     let install = hooks_menu(app, installer.is_some(), &status)?;
+    let context = MenuItem::with_id(
+        app,
+        "context",
+        tr("Show context", "显示上下文"),
+        true,
+        None::<&str>,
+    )?;
     let quit = MenuItem::with_id(app, "quit", tr("Quit", "退出"), true, None::<&str>)?;
     let language = MenuItem::with_id(app, "lang", language_label(), true, None::<&str>)?;
     let menu = Menu::with_items(
@@ -471,6 +504,7 @@ pub fn build_tray_menu(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
             &PredefinedMenuItem::separator(app)?,
             &show,
             &play,
+            &context,
             &map,
             &PredefinedMenuItem::separator(app)?,
             &source,
@@ -609,6 +643,23 @@ pub fn run(app: &AppHandle, action: Action) {
             }
             refresh_tray(app);
         }
+        Action::ShowContext => {
+            crate::commands::show_pet(app);
+            let text = crate::context::load_text(&crate::home::user_home_dir());
+            let _ = app.emit("show-context", text);
+        }
+        Action::Hooks { agent, install } if agent == statusline::MENU_ID => {
+            let exe = std::env::current_exe().unwrap_or_default();
+            if let Err(e) = statusline::set_installed(
+                &statusline::claude_settings_path(),
+                &crate::home::user_home_dir(),
+                &exe,
+                install,
+            ) {
+                tracing::warn!("Cannot change the Claude Code status line: {e}");
+            }
+            refresh_tray(app);
+        }
         Action::Hooks { agent, install } => {
             // blocking and short (it rewrites one small config file); the menu is rebuilt after
             match Installer::locate() {
@@ -664,6 +715,36 @@ mod tests {
         );
         let label = language_label();
         assert!(label.contains("English") || label.contains("中文"));
+    }
+
+    #[test]
+    fn ac_0_9_4_show_context_is_on_both_menus() {
+        assert_eq!(parse_action("context", ""), Some(Action::ShowContext));
+        assert_eq!(
+            parse_action("pop:context", POPUP_PREFIX),
+            Some(Action::ShowContext)
+        );
+        // neither menu triggers the other's entry
+        assert_eq!(parse_action("pop:context", ""), None);
+        assert_eq!(parse_action("context", POPUP_PREFIX), None);
+    }
+
+    #[test]
+    fn ac_0_9_4_statusline_row_uses_the_install_ids() {
+        assert_eq!(
+            parse_action("hooks:install:claude-statusline", ""),
+            Some(Action::Hooks {
+                agent: statusline::MENU_ID.into(),
+                install: true
+            })
+        );
+        assert_eq!(
+            parse_action("hooks:remove:claude-statusline", ""),
+            Some(Action::Hooks {
+                agent: statusline::MENU_ID.into(),
+                install: false
+            })
+        );
     }
 
     #[test]

@@ -109,6 +109,11 @@ async function main() {
       .catch((e) => jsLog("error", "Main", `play-animation failed: ${e}`));
   });
 
+  // Show context (menu-bar icon or right-click menu): the backend sends the text to display
+  const unlistenContext = await listen("show-context", (event) => {
+    bubble.showNote(String(event.payload), 15000);
+  });
+
   menu.build(config.menu_items);
   const interactions = setupInteractions({ animator, menu, bubble, petSprite, jsLog });
 
@@ -118,6 +123,7 @@ async function main() {
     cleanedUp = true;
     unlistenStateChange();
     unlistenPlay();
+    unlistenContext();
     interactions.stop();
     menu.stop();
     animator.stop();

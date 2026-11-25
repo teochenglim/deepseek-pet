@@ -77,6 +77,7 @@ export class DialogueBubble {
     hookEvent = "",
     pendingPermissionCount = 0,
   ) {
+    this.el.classList.remove("note");
     this.latest = {
       text,
       sessionCount,
@@ -86,6 +87,15 @@ export class DialogueBubble {
       pendingPermissionCount,
     };
     this.render();
+  }
+
+  /** 显示多行说明（例如 Show context），保持 `ms` 毫秒后淡出；忽略折叠状态。 */
+  showNote(text, ms = 15000) {
+    this.collapsed = false;
+    this.show(text, 0, "idle", true);
+    this.el.classList.add("note");
+    this.clearAutoHide();
+    this.hideTimer = setTimeout(() => this.hide(), ms);
   }
 
   render() {

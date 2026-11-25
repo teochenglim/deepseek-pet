@@ -113,6 +113,14 @@ impl PetConfig {
                 if let Err(e) = crate::home::ensure_user_home(&user_home, resources) {
                     warn!("Cannot prepare {}: {}", user_home.display(), e);
                 }
+                // an upgrade may have moved the app; keep the status line's stable link pointing at it
+                if let Ok(exe) = std::env::current_exe() {
+                    if crate::statusline::state(&crate::statusline::claude_settings_path())
+                        == crate::statusline::State::Installed
+                    {
+                        let _ = crate::statusline::ensure_link(&user_home, &exe);
+                    }
+                }
                 (
                     user_home.join("config.json"),
                     resources.to_string_lossy().to_string(),

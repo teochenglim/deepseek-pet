@@ -6,12 +6,14 @@ mod aggregator;
 mod catalog;
 mod commands;
 mod config;
+mod context;
 mod home;
 mod hooks;
 mod i18n;
 mod mapping;
 mod menus;
 mod settings;
+mod statusline;
 mod watcher;
 
 use aggregator::ActivityAggregator;
@@ -71,6 +73,11 @@ impl Drop for SocketGuard {
             let _ = std::fs::remove_file(&self.endpoint);
         }
     }
+}
+
+/// `deepseek-pet --statusline`: Claude Code's status line command. Runs before Tauri starts.
+pub fn run_statusline() -> i32 {
+    statusline::run()
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

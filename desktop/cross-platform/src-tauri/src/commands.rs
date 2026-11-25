@@ -118,12 +118,15 @@ pub fn show_pet(app: &tauri::AppHandle) {
     }
 }
 
-/// "Show Big Blue Fish" and Dock click: show the window and make sure the pet is drawn - the window
-/// goes back to its normal size and onto a screen, and the page redraws the pet and clears any note.
+/// "Show Big Blue Fish" and the Dock click: show the window and reload the pet's page, so the pet
+/// is drawn whatever state the page was in (after a note, a played clip, a hide...). The window keeps
+/// its place if it is on a screen; otherwise the page puts it in its default corner.
 pub fn show_pet_fresh(app: &tauri::AppHandle) {
     show_pet(app);
-    crate::note_window::reset(app);
-    let _ = tauri::Emitter::emit(app, "reset-pet", ());
+    crate::context_window::remember_position(app);
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.reload();
+    }
 }
 
 /// 清除磁盘上所有会话文件，并清空内存中的活动 map。由前端三连击交互触发。

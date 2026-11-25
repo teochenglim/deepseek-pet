@@ -1,0 +1,6 @@
+{
+  "identifier": "context",
+  "description": "The floating Show Claude context window may only close itself (click to dismiss).",
+  "windows": ["context-*"],
+  "permissions": ["core:window:allow-close"]
+}

@@ -7,13 +7,13 @@ mod catalog;
 mod commands;
 mod config;
 mod context;
+mod context_window;
 mod home;
 mod hooks;
 mod i18n;
 mod legacy;
 mod mapping;
 mod menus;
-mod note_window;
 mod settings;
 mod watcher;
 
@@ -201,7 +201,7 @@ pub fn run() {
             // 10. 存储配置 + 聚合器，供前端 / 命令访问
             let endpoint_for_guard = config.event_endpoint.clone();
             app.manage(session_mgr.clone());
-            app.manage(note_window::NoteWindow::default());
+            app.manage(context_window::RestorePos::default());
             app.manage(config);
             // RAII 兜底：若进程 panic 并展开（Drop 在展开期间运行），则删除 socket
             // 文件。正常退出路径会在 `quit_app` 中显式清理；见 SocketGuard 的文档注释。
@@ -252,8 +252,7 @@ pub fn run() {
             commands::read_frames_batch,
             commands::cursor_in_window,
             commands::js_log,
-            note_window::note_window_grow,
-            note_window::note_window_restore
+            context_window::apply_restore_position
         ])
         .build(tauri::generate_context!())
         .expect("error while building DeepseekPet")

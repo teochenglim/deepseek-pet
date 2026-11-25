@@ -627,9 +627,11 @@ pub fn run(app: &AppHandle, action: Action) {
             refresh_tray(app);
         }
         Action::ShowContext => {
-            crate::commands::show_pet(app);
+            // a window of its own: the pet is not touched
             let text = crate::context::load_text(&crate::context::claude_projects_dir());
-            let _ = app.emit("show-context", crate::context::note_payload(&text));
+            if let Err(e) = crate::context_window::open(app, &text) {
+                tracing::warn!("Cannot open the context window: {e}");
+            }
         }
         Action::Hooks { agent, install } => {
             // blocking and short (it rewrites one small config file); the menu is rebuilt after

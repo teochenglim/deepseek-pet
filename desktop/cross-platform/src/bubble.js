@@ -77,7 +77,6 @@ export class DialogueBubble {
     hookEvent = "",
     pendingPermissionCount = 0,
   ) {
-    this.endNote();
     this.latest = {
       text,
       sessionCount,
@@ -87,28 +86,6 @@ export class DialogueBubble {
       pendingPermissionCount,
     };
     this.render();
-  }
-
-  /** 显示多行说明（Show Claude context），保持 `ms` 毫秒（最后两秒淡出）；忽略折叠状态。
-   * 说明显示期间窗口会变大（见 main.js），结束时调用 onNoteEnd 让窗口恢复原样。 */
-  showNote(text, ms = 20000) {
-    this.collapsed = false;
-    this.noteActive = false; // show() must not end the note that is starting
-    this.show(text, 0, "idle", true);
-    this.el.classList.add("note");
-    this.noteActive = true;
-    this.clearAutoHide();
-    // fade out over the last two seconds, then hide (which also gives the window back)
-    this.fadeTimer = setTimeout(() => this.el.classList.add("fading"), Math.max(0, ms - 2000));
-    this.hideTimer = setTimeout(() => this.hide(), ms);
-  }
-
-  /** 说明结束（被新消息替换、淡出或被点击收起）：通知窗口恢复。 */
-  endNote() {
-    if (!this.noteActive) return;
-    this.noteActive = false;
-    this.el.classList.remove("note");
-    if (this.onNoteEnd) this.onNoteEnd();
   }
 
   render() {
@@ -153,7 +130,6 @@ export class DialogueBubble {
   }
 
   hideBubble() {
-    this.endNote();
     this.clearAutoHide();
     this.el.classList.remove("visible");
     this.el.classList.add("hidden");
@@ -167,11 +143,6 @@ export class DialogueBubble {
   }
 
   clearAutoHide() {
-    if (this.fadeTimer) {
-      clearTimeout(this.fadeTimer);
-      this.fadeTimer = null;
-    }
-    this.el.classList.remove("fading");
     if (this.hideTimer) {
       clearTimeout(this.hideTimer);
       this.hideTimer = null;

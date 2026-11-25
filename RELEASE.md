@@ -18,6 +18,7 @@ macOS desktop pet: Tauri v2 shell forked from coding-agent-pet, Big Blue Fish an
 | Release | Theme | Status | Requirements |
 |---|---|---|---|
 | [v1.0.0](RELEASE/v1.0.0.md) | Stable release | planned | R-P1, R-D1, R-M1 |
+| [v0.9.7](RELEASE/v0.9.7.md) | Show Claude context is a floating window of its own; Show Big Blue Fish always redraws the pet | active | R-X1 |
 | [v0.9.6](RELEASE/v0.9.6.md) | The pet never disappears after Show Claude context; Show Big Blue Fish redraws it; note fades after 20 s | active | R-X1 |
 | [v0.9.5](RELEASE/v0.9.5.md) | Statusline removed; Show Claude context reads the transcript and speaks in the pet's bubble | active | R-X1 |
 | [v0.9.4](RELEASE/v0.9.4.md) | Statusline is just the avatar; Show Claude context is its own feature | active | R-X1 |

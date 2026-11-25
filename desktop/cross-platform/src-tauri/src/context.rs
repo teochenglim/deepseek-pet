@@ -68,6 +68,46 @@ pub fn missing_text() -> String {
     .to_string()
 }
 
+/// The status line's text rows: model and folder, context bar with tokens, session cost.
+pub fn status_rows(doc: &Value) -> Vec<String> {
+    let window = doc.get("context_window").unwrap_or(&Value::Null);
+    let model = doc
+        .pointer("/model/display_name")
+        .and_then(Value::as_str)
+        .unwrap_or("Claude");
+    let cwd = doc
+        .pointer("/workspace/current_dir")
+        .or_else(|| doc.get("cwd"))
+        .and_then(Value::as_str)
+        .unwrap_or("");
+    let folder = std::path::Path::new(cwd)
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("");
+    let mut rows = vec![format!("\x1b[1m{model}\x1b[0m  {folder}")
+        .trim_end()
+        .to_string()];
+    let size = window
+        .get("context_window_size")
+        .and_then(Value::as_u64)
+        .unwrap_or(0);
+    if size > 0 {
+        let pct = percent(window);
+        rows.push(format!(
+            "context {} {pct:.0}%  {}/{}",
+            bar(pct),
+            tokens(used_tokens(window)),
+            tokens(size)
+        ));
+    } else {
+        rows.push("context: no data yet".to_string());
+    }
+    if let Some(cost) = doc.pointer("/cost/total_cost_usd").and_then(Value::as_f64) {
+        rows.push(format!("${cost:.2} this session"));
+    }
+    rows
+}
+
 /// Bubble text for a saved document; `now` is unix seconds (a parameter so tests are exact).
 pub fn summary(doc: &Value, now: u64) -> String {
     let window = doc.get("context_window").unwrap_or(&Value::Null);
@@ -170,6 +210,34 @@ mod tests {
         assert_eq!(bar(250.0 / 2.0), "██████████"); // never wider than the bar
         assert_eq!(tokens(999), "999");
         assert_eq!(tokens(1_250_000), "1.2M");
+    }
+
+    #[test]
+    fn ac_0_9_5_context_rows_stand_alone_without_the_avatar() {
+        // the live payload Claude Code sends (not the saved file `doc()` above)
+        let live = json!({
+            "model": {"display_name": "Opus 5"},
+            "workspace": {"current_dir": "/x/deepseek-pet"},
+            "context_window": {"context_window_size": 200000, "used_percentage": 42,
+                "current_usage": {"input_tokens": 1000, "cache_read_input_tokens": 83000}},
+            "cost": {"total_cost_usd": 0.4213}
+        });
+        let rows = status_rows(&live);
+        assert_eq!(rows.len(), 3);
+        assert!(
+            rows[0].contains("Opus 5") && rows[0].contains("deepseek-pet"),
+            "{rows:?}"
+        );
+        assert!(
+            rows[1].contains("42%") && rows[1].contains("84k/200k"),
+            "{rows:?}"
+        );
+        assert!(rows[2].contains("$0.42"), "{rows:?}");
+        assert!(
+            rows.iter().all(|r| !r.contains('\u{a0}')),
+            "no avatar padding in the rows"
+        );
+        assert_eq!(status_rows(&json!({}))[1], "context: no data yet");
     }
 
     #[test]

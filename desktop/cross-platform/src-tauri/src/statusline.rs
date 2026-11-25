@@ -5,7 +5,7 @@
 //! `~/.deepseek-pet/bin/statusline`), so nothing else has to be installed on the Mac: no Python,
 //! no jq, no Node. Each run also saves the document as `~/.deepseek-pet/context.json` for the
 //! "Show context" menu entry (`context.rs`).
-use crate::context::{self, bar, percent, tokens, used_tokens};
+use crate::context;
 use serde_json::{json, Value};
 use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
@@ -33,58 +33,22 @@ fn visible_width(line: &str) -> usize {
     width
 }
 
-fn text_rows(doc: &Value) -> Vec<String> {
-    let window = doc.get("context_window").unwrap_or(&Value::Null);
-    let model = doc
-        .pointer("/model/display_name")
-        .and_then(Value::as_str)
-        .unwrap_or("Claude");
-    let cwd = doc
-        .pointer("/workspace/current_dir")
-        .or_else(|| doc.get("cwd"))
-        .and_then(Value::as_str)
-        .unwrap_or("");
-    let folder = Path::new(cwd)
-        .file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("");
-    let mut rows = vec![format!("\x1b[1m{model}\x1b[0m  {folder}")
-        .trim_end()
-        .to_string()];
-    let size = window
-        .get("context_window_size")
-        .and_then(Value::as_u64)
-        .unwrap_or(0);
-    if size > 0 {
-        let pct = percent(window);
-        rows.push(format!(
-            "context {} {pct:.0}%  {}/{}",
-            bar(pct),
-            tokens(used_tokens(window)),
-            tokens(size)
-        ));
-    } else {
-        rows.push("context: no data yet".to_string());
-    }
-    if let Some(cost) = doc.pointer("/cost/total_cost_usd").and_then(Value::as_f64) {
-        rows.push(format!("${cost:.2} this session"));
-    }
-    rows
+/// The avatar alone, one string per text row (transparent cells are no-break spaces).
+pub fn avatar_lines() -> Vec<String> {
+    LOGO.lines()
+        .map(|l| l.replace(' ', &NBSP.to_string()))
+        .collect()
 }
 
-/// The avatar with the text rows beside it, vertically centred.
-pub fn render(doc: &Value) -> String {
-    let rows = text_rows(doc);
-    let logo: Vec<String> = LOGO
-        .lines()
-        .map(|l| l.replace(' ', &NBSP.to_string()))
-        .collect();
-    if logo.is_empty() {
+/// Put `rows` beside `avatar`, vertically centred, padded so every row starts in the same column.
+pub fn compose(avatar: &[String], rows: &[String]) -> String {
+    if avatar.is_empty() {
         return rows.join("\n");
     }
-    let width = logo.iter().map(|l| visible_width(l)).max().unwrap_or(0);
-    let skip = logo.len().saturating_sub(rows.len()) / 2;
-    logo.iter()
+    let width = avatar.iter().map(|l| visible_width(l)).max().unwrap_or(0);
+    let skip = avatar.len().saturating_sub(rows.len()) / 2;
+    avatar
+        .iter()
         .enumerate()
         .map(|(i, line)| {
             let text = i
@@ -96,6 +60,11 @@ pub fn render(doc: &Value) -> String {
         })
         .collect::<Vec<_>>()
         .join("\n")
+}
+
+/// The status line: the avatar (this module) beside the context display (`context::status_rows`).
+pub fn render(doc: &Value) -> String {
+    compose(&avatar_lines(), &context::status_rows(doc))
 }
 
 // ── saving the numbers for the menu ─────────────────────────────────────────────────────────
@@ -373,6 +342,17 @@ mod tests {
             .collect();
         assert_eq!(starts.len(), 3, "{out}");
         assert!(starts.iter().all(|s| *s == starts[0]), "{starts:?}");
+    }
+
+    #[test]
+    fn ac_0_9_5_avatar_stands_alone_without_any_text() {
+        let avatar = avatar_lines();
+        assert!(avatar.len() >= 8, "avatar is several rows tall");
+        let text = avatar.join("\n");
+        assert!(!text.contains("context") && !text.contains('$'));
+        // the avatar alone composes with no rows, and rows alone compose without an avatar
+        assert_eq!(compose(&avatar, &[]).lines().count(), avatar.len());
+        assert_eq!(compose(&[], &["a".into(), "b".into()]), "a\nb");
     }
 
     #[test]

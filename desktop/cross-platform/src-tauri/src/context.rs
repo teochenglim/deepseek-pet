@@ -3,7 +3,7 @@
 //! line on every refresh. `statusline.rs` saves the latest document as `~/.deepseek-pet/context.json`;
 //! this module turns it into text for the pet's speech bubble.
 use crate::i18n::tr;
-use serde_json::Value;
+use serde_json::{json, Value};
 use std::path::{Path, PathBuf};
 
 pub const BAR_WIDTH: usize = 10;
@@ -62,50 +62,28 @@ fn age(seconds: u64) -> String {
 
 pub fn missing_text() -> String {
     tr(
-        "No context yet. Install the statusline (menu bar > Install hooks), then start Claude Code.",
-        "还没有上下文数据。请先安装状态栏（菜单栏 > 安装钩子），再启动 Claude Code。",
+        "No Claude context yet. Install the statusline (menu bar > Install hooks), restart Claude Code and send a message.",
+        "还没有 Claude 上下文数据。请先安装状态栏（菜单栏 > 安装钩子），重启 Claude Code 并发送一条消息。",
     )
     .to_string()
 }
 
-/// The status line's text rows: model and folder, context bar with tokens, session cost.
-pub fn status_rows(doc: &Value) -> Vec<String> {
-    let window = doc.get("context_window").unwrap_or(&Value::Null);
-    let model = doc
-        .pointer("/model/display_name")
-        .and_then(Value::as_str)
-        .unwrap_or("Claude");
-    let cwd = doc
-        .pointer("/workspace/current_dir")
-        .or_else(|| doc.get("cwd"))
-        .and_then(Value::as_str)
-        .unwrap_or("");
-    let folder = std::path::Path::new(cwd)
-        .file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("");
-    let mut rows = vec![format!("\x1b[1m{model}\x1b[0m  {folder}")
-        .trim_end()
-        .to_string()];
-    let size = window
-        .get("context_window_size")
-        .and_then(Value::as_u64)
-        .unwrap_or(0);
-    if size > 0 {
-        let pct = percent(window);
-        rows.push(format!(
-            "context {} {pct:.0}%  {}/{}",
-            bar(pct),
-            tokens(used_tokens(window)),
-            tokens(size)
-        ));
-    } else {
-        rows.push("context: no data yet".to_string());
-    }
-    if let Some(cost) = doc.pointer("/cost/total_cost_usd").and_then(Value::as_f64) {
-        rows.push(format!("${cost:.2} this session"));
-    }
-    rows
+/// The part of Claude Code's status line document this feature needs, stamped with the time.
+pub fn to_saved(doc: &Value, now: u64) -> Value {
+    json!({
+        "updated": now,
+        "session_id": doc.get("session_id"),
+        "model": doc.pointer("/model/display_name").or_else(|| doc.pointer("/model/id")),
+        "cwd": doc.pointer("/workspace/current_dir").or_else(|| doc.get("cwd")),
+        "context_window": doc.get("context_window").cloned().unwrap_or(Value::Null),
+        "cost": {"total_cost_usd": doc.pointer("/cost/total_cost_usd")},
+    })
+}
+
+/// Keep the latest numbers in `~/.deepseek-pet/context.json`. The status line command is the only
+/// place Claude Code hands them out, so it calls this on every run; nothing is printed here.
+pub fn save(home: &Path, doc: &Value, now: u64) -> std::io::Result<()> {
+    crate::home::write_atomic(&context_path(home), &to_saved(doc, now).to_string())
 }
 
 /// Bubble text for a saved document; `now` is unix seconds (a parameter so tests are exact).
@@ -123,7 +101,7 @@ pub fn summary(doc: &Value, now: u64) -> String {
     let pct = percent(window);
     let usage = window.get("current_usage").unwrap_or(&Value::Null);
     let mut lines = vec![
-        format!("{} · {model}", tr("Context", "上下文")),
+        format!("{} · {model}", tr("Claude context", "Claude 上下文")),
         format!(
             "{} {pct:.0}%  {} / {}",
             bar(pct),
@@ -213,31 +191,33 @@ mod tests {
     }
 
     #[test]
-    fn ac_0_9_5_context_rows_stand_alone_without_the_avatar() {
-        // the live payload Claude Code sends (not the saved file `doc()` above)
+    fn ac_0_9_5_context_is_saved_and_shown_without_the_avatar() {
+        // the context feature works on its own: save a Claude Code payload, read it back as text
         let live = json!({
-            "model": {"display_name": "Opus 5"},
-            "workspace": {"current_dir": "/x/deepseek-pet"},
+            "session_id": "s1", "model": {"display_name": "Opus 5"},
             "context_window": {"context_window_size": 200000, "used_percentage": 42,
                 "current_usage": {"input_tokens": 1000, "cache_read_input_tokens": 83000}},
             "cost": {"total_cost_usd": 0.4213}
         });
-        let rows = status_rows(&live);
-        assert_eq!(rows.len(), 3);
+        let home = std::env::temp_dir().join(format!("deepseek-pet-ctx-{}", std::process::id()));
+        save(&home, &live, 1000).unwrap();
+        let text = load_text(&home);
         assert!(
-            rows[0].contains("Opus 5") && rows[0].contains("deepseek-pet"),
-            "{rows:?}"
+            text.contains("Opus 5") && text.contains("42%") && text.contains("$0.42"),
+            "{text}"
         );
+        assert!(!text.contains('\u{a0}'), "no avatar in the context text");
+        let _ = std::fs::remove_dir_all(home);
+    }
+
+    #[test]
+    fn ac_0_9_6_missing_data_hint_says_how_to_get_it() {
+        let hint = missing_text();
+        assert!(hint.contains("Claude context"), "{hint}");
         assert!(
-            rows[1].contains("42%") && rows[1].contains("84k/200k"),
-            "{rows:?}"
+            hint.contains("statusline") && hint.contains("send a message"),
+            "{hint}"
         );
-        assert!(rows[2].contains("$0.42"), "{rows:?}");
-        assert!(
-            rows.iter().all(|r| !r.contains('\u{a0}')),
-            "no avatar padding in the rows"
-        );
-        assert_eq!(status_rows(&json!({}))[1], "context: no data yet");
     }
 
     #[test]

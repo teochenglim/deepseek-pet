@@ -121,11 +121,12 @@ Claude Code / ZCode / Codex / Gemini / ...  --hook-->  pet-hook.sh  --localhost-
 
 Change any row from the menu-bar icon, **Map animations**.
 
-## Claude Code status line and Show context
+## Claude Code status line and Show Claude context
 
-Menu-bar icon, **Install hooks**, **Claude Code statusline**: Claude Code then shows the fish with the model, context use and cost under the prompt (restart the session). It needs no Python: the status line is the app itself. If you already have your own status line it is left alone.
+Two separate things:
 
-**Show context** (menu-bar icon and the pet's right-click menu) pops a bubble with the context window, tokens used, cache and cost. Claude Code does not let other programs read the `/context` screen, so these are the numbers it gives the status line; they appear after the first turn.
+- **Statusline** (menu-bar icon, **Install hooks**, **Claude Code statusline**): Claude Code shows the fish under the prompt, nothing else (restart the session). It needs no Python: the status line is the app itself. If you already have your own status line it is left alone.
+- **Show Claude context** (menu-bar icon and the pet's right-click menu): a bubble with the context window, tokens used, cache and cost. Claude Code does not let other programs read the `/context` screen, so these are the numbers it gives its status line command; the installed statusline records them silently, so you need it installed, a restart and one message before this shows anything.
 
 ## Hooks from the command line
 

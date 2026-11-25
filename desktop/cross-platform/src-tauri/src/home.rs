@@ -33,6 +33,18 @@ pub fn bundle_resources(exe: &Path) -> Option<PathBuf> {
     resources.is_dir().then_some(resources)
 }
 
+/// Write-then-rename, so a reader (the menu, Claude Code) never sees half a file.
+pub fn write_atomic(path: &Path, text: &str) -> io::Result<()> {
+    if let Some(dir) = path.parent() {
+        fs::create_dir_all(dir)?;
+    }
+    let tmp = path.with_extension(format!("tmp{}", std::process::id()));
+    fs::write(&tmp, text)?;
+    fs::rename(&tmp, path).inspect_err(|_| {
+        let _ = fs::remove_file(&tmp);
+    })
+}
+
 fn copy_dir(src: &Path, dst: &Path) -> io::Result<()> {
     fs::create_dir_all(dst)?;
     for entry in fs::read_dir(src)? {

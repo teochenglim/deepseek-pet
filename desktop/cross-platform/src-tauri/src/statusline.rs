@@ -1,16 +1,16 @@
-//! Claude Code status line: the pet's avatar next to the model, context use and cost.
+//! Claude Code status line: just the pet's avatar, a message-of-the-day line with no text.
 //!
 //! Claude Code runs the configured command after every turn and pipes a JSON document to it. The
 //! command is this app's own binary (`deepseek-pet --statusline`, reached through the stable link
 //! `~/.deepseek-pet/bin/statusline`), so nothing else has to be installed on the Mac: no Python,
-//! no jq, no Node. Each run also saves the document as `~/.deepseek-pet/context.json` for the
-//! "Show context" menu entry (`context.rs`).
+//! no jq, no Node. The numbers in that document are not shown here: each run hands them to
+//! `context.rs` (the separate "Show Claude context" feature) and prints only the avatar.
 use crate::context;
 use serde_json::{json, Value};
 use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
 
-/// The avatar as 24-bit-colour quadrant-block text; regenerate with `tools/make_statusline_logo.py`.
+/// The avatar as 24-bit-colour block text; regenerate with `tools/make_statusline_logo.py`.
 const LOGO: &str = include_str!("../../hooks/statusline-logo.ansi");
 /// Claude Code trims leading plain spaces from status lines; a no-break space survives.
 const NBSP: char = '\u{a0}';
@@ -19,101 +19,41 @@ pub const MENU_ID: &str = "claude-statusline";
 
 // ── rendering ───────────────────────────────────────────────────────────────────────────────
 
-fn visible_width(line: &str) -> usize {
-    let mut width = 0;
-    let mut in_escape = false;
-    for c in line.chars() {
-        match (in_escape, c) {
-            (false, '\x1b') => in_escape = true,
-            (true, 'm') => in_escape = false,
-            (false, _) => width += 1,
-            _ => {}
-        }
-    }
-    width
-}
-
-/// The avatar alone, one string per text row (transparent cells are no-break spaces).
+/// The avatar, one string per text row (transparent cells are no-break spaces).
 pub fn avatar_lines() -> Vec<String> {
     LOGO.lines()
         .map(|l| l.replace(' ', &NBSP.to_string()))
         .collect()
 }
 
-/// Put `rows` beside `avatar`, vertically centred, padded so every row starts in the same column.
-pub fn compose(avatar: &[String], rows: &[String]) -> String {
-    if avatar.is_empty() {
-        return rows.join("\n");
-    }
-    let width = avatar.iter().map(|l| visible_width(l)).max().unwrap_or(0);
-    let skip = avatar.len().saturating_sub(rows.len()) / 2;
-    avatar
-        .iter()
-        .enumerate()
-        .map(|(i, line)| {
-            let text = i
-                .checked_sub(skip)
-                .and_then(|j| rows.get(j))
-                .map_or("", |s| s.as_str());
-            let pad = NBSP.to_string().repeat(width - visible_width(line));
-            format!("{line}{pad}  {text}").trim_end().to_string()
-        })
-        .collect::<Vec<_>>()
-        .join("\n")
+/// What the status line prints: the avatar and nothing else.
+pub fn render() -> String {
+    avatar_lines().join("\n")
 }
 
-/// The status line: the avatar (this module) beside the context display (`context::status_rows`).
-pub fn render(doc: &Value) -> String {
-    compose(&avatar_lines(), &context::status_rows(doc))
-}
-
-// ── saving the numbers for the menu ─────────────────────────────────────────────────────────
-
-/// The part of Claude Code's document the menu needs, stamped with the time.
-pub fn to_saved(doc: &Value, now: u64) -> Value {
-    json!({
-        "updated": now,
-        "session_id": doc.get("session_id"),
-        "model": doc.pointer("/model/display_name").or_else(|| doc.pointer("/model/id")),
-        "cwd": doc.pointer("/workspace/current_dir").or_else(|| doc.get("cwd")),
-        "context_window": doc.get("context_window").cloned().unwrap_or(Value::Null),
-        "cost": {"total_cost_usd": doc.pointer("/cost/total_cost_usd")},
-    })
-}
-
-/// Write-then-rename so the menu never reads half a file.
-fn write_atomic(path: &Path, text: &str) -> io::Result<()> {
-    if let Some(dir) = path.parent() {
-        std::fs::create_dir_all(dir)?;
-    }
-    let tmp = path.with_extension(format!("tmp{}", std::process::id()));
-    std::fs::write(&tmp, text)?;
-    std::fs::rename(&tmp, path).inspect_err(|_| {
-        let _ = std::fs::remove_file(&tmp);
-    })
-}
-
-pub fn save(home: &Path, doc: &Value, now: u64) -> io::Result<()> {
-    write_atomic(
-        &context::context_path(home),
-        &to_saved(doc, now).to_string(),
-    )
-}
-
-/// `deepseek-pet --statusline`: read the document, save it, print the status line. Never fails.
-pub fn run() -> i32 {
-    let mut input = String::new();
-    let _ = io::stdin().read_to_string(&mut input);
-    let doc = serde_json::from_str::<Value>(&input)
+/// One run of the command: keep the numbers for "Show Claude context" (silently), print the avatar.
+pub fn handle(input: &str, home: &Path, now: u64) -> String {
+    let doc = serde_json::from_str::<Value>(input)
         .ok()
         .filter(Value::is_object)
         .unwrap_or_else(|| json!({}));
+    let _ = context::save(home, &doc, now);
+    render()
+}
+
+/// `deepseek-pet --statusline`: Claude Code's status line command. Never fails.
+pub fn run() -> i32 {
+    let mut input = String::new();
+    let _ = io::stdin().read_to_string(&mut input);
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_secs())
         .unwrap_or(0);
-    let _ = save(&crate::home::user_home_dir(), &doc, now);
-    let _ = writeln!(io::stdout(), "{}", render(&doc));
+    let _ = writeln!(
+        io::stdout(),
+        "{}",
+        handle(&input, &crate::home::user_home_dir(), now)
+    );
     0
 }
 
@@ -229,7 +169,7 @@ pub fn set_installed(settings: &Path, home: &Path, exe: &Path, install: bool) ->
         std::fs::copy(settings, &bak)?;
     }
     let text = serde_json::to_string_pretty(&doc).map_err(io::Error::other)?;
-    write_atomic(settings, &(text + "\n"))
+    crate::home::write_atomic(settings, &(text + "\n"))
 }
 
 /// Menu row for the "Install hooks" submenu: (text, enabled, installed).
@@ -303,17 +243,13 @@ mod tests {
     }
 
     #[test]
-    fn ac_0_9_1_statusline_shows_avatar_and_numbers() {
-        let out = render(&payload());
-        assert!(
-            out.chars().any(|c| BLOCKS.contains(c)),
-            "avatar blocks missing"
-        );
-        assert!(out.contains("\x1b[38;2;"), "avatar colour missing");
-        for want in ["Opus 5", "deepseek-pet", "42%", "84k/200k", "$0.42"] {
-            assert!(out.contains(want), "{want} missing in {out}");
+    fn ac_0_9_7_statusline_prints_only_the_avatar() {
+        let out = handle(&payload().to_string(), &temp("only"), 1);
+        assert_eq!(out, avatar_lines().join("\n"));
+        assert!(out.lines().count() >= 8, "avatar is several rows tall");
+        for text in ["Opus 5", "deepseek-pet", "42%", "84k", "$0.42", "context"] {
+            assert!(!out.contains(text), "{text} must not be printed");
         }
-        assert!(out.lines().count() >= 3, "avatar is several rows tall");
         assert!(
             out.lines().all(|l| !l.starts_with(' ')),
             "leading plain spaces would be trimmed by Claude Code"
@@ -329,50 +265,37 @@ mod tests {
         {
             assert!(BLOCKS.contains(c), "{c} may be mis-measured by Claude Code");
         }
-        // and every text row starts in the same column
-        let plain = |l: &str| visible_width(l);
-        let out = render(&payload());
-        let starts: Vec<usize> = out
-            .lines()
-            .filter_map(|l| {
-                ["Opus 5", "context", "$0.42"]
-                    .iter()
-                    .find_map(|t| l.find(t).map(|i| plain(&l[..i])))
-            })
-            .collect();
-        assert_eq!(starts.len(), 3, "{out}");
-        assert!(starts.iter().all(|s| *s == starts[0]), "{starts:?}");
     }
 
     #[test]
     fn ac_0_9_5_avatar_stands_alone_without_any_text() {
-        let avatar = avatar_lines();
-        assert!(avatar.len() >= 8, "avatar is several rows tall");
-        let text = avatar.join("\n");
+        let text = avatar_lines().join("\n");
         assert!(!text.contains("context") && !text.contains('$'));
-        // the avatar alone composes with no rows, and rows alone compose without an avatar
-        assert_eq!(compose(&avatar, &[]).lines().count(), avatar.len());
-        assert_eq!(compose(&[], &["a".into(), "b".into()]), "a\nb");
+        assert!(text.chars().any(|c| BLOCKS.contains(c)));
     }
 
     #[test]
     fn ac_0_9_1_broken_payload_still_prints_the_avatar() {
-        let out = render(&json!({}));
-        assert!(out.chars().any(|c| BLOCKS.contains(c)));
-        assert!(out.contains("context: no data yet"));
+        let home = temp("broken");
+        for input in ["", "not json", "[1,2]"] {
+            let out = handle(input, &home, 1);
+            assert!(out.chars().any(|c| BLOCKS.contains(c)), "{input:?}");
+        }
+        let _ = std::fs::remove_dir_all(home);
     }
 
     #[test]
-    fn ac_0_9_1_each_run_saves_the_numbers_for_the_menu() {
+    fn ac_0_9_7_statusline_still_records_the_numbers_silently() {
         let home = temp("save");
-        save(&home, &payload(), 1234).unwrap();
+        let out = handle(&payload().to_string(), &home, 1234);
+        assert!(!out.contains("42%"), "recorded, not printed");
         let saved: Value =
             serde_json::from_str(&std::fs::read_to_string(context::context_path(&home)).unwrap())
                 .unwrap();
         assert_eq!(saved["updated"], 1234);
         assert_eq!(saved["model"], "Opus 5");
         assert_eq!(saved["context_window"]["context_window_size"], 200000);
-        // the menu reads exactly what the status line wrote
+        // "Show Claude context" reads exactly what the status line recorded
         assert!(context::summary(&saved, 1234).contains("42%"));
         let _ = std::fs::remove_dir_all(home);
     }

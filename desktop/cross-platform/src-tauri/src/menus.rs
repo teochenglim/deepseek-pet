@@ -163,7 +163,7 @@ pub fn pet_popup(app: &AppHandle, clips: &[Clip]) -> tauri::Result<Menu<Wry>> {
     menu.append(&MenuItem::with_id(
         app,
         format!("{POPUP_PREFIX}context"),
-        tr("Show context", "显示上下文"),
+        context_label(),
         true,
         None::<&str>,
     )?)?;
@@ -338,6 +338,11 @@ fn map_menu(
     Ok(root)
 }
 
+/// The context entry on both menus.
+pub fn context_label() -> &'static str {
+    tr("Show Claude context", "显示 Claude 上下文")
+}
+
 /// The language button names the language it switches to.
 pub fn language_label() -> &'static str {
     if i18n::is_zh() {
@@ -488,13 +493,7 @@ pub fn build_tray_menu(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
     let map = map_menu(app, &clips, &mapping, last, &installed)?;
     let source = source_menu(app, &installed, active.as_deref())?;
     let install = hooks_menu(app, installer.is_some(), &status)?;
-    let context = MenuItem::with_id(
-        app,
-        "context",
-        tr("Show context", "显示上下文"),
-        true,
-        None::<&str>,
-    )?;
+    let context = MenuItem::with_id(app, "context", context_label(), true, None::<&str>)?;
     let quit = MenuItem::with_id(app, "quit", tr("Quit", "退出"), true, None::<&str>)?;
     let language = MenuItem::with_id(app, "lang", language_label(), true, None::<&str>)?;
     let menu = Menu::with_items(
@@ -727,6 +726,15 @@ mod tests {
         // neither menu triggers the other's entry
         assert_eq!(parse_action("pop:context", ""), None);
         assert_eq!(parse_action("context", POPUP_PREFIX), None);
+    }
+
+    #[test]
+    fn ac_0_9_6_menu_entry_is_named_show_claude_context() {
+        assert_eq!(context_label(), "Show Claude context");
+        assert_eq!(
+            tr("Show Claude context", "显示 Claude 上下文"),
+            context_label()
+        );
     }
 
     #[test]
